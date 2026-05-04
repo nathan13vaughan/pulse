@@ -12,10 +12,11 @@ Close the feedback loop between diet and blood pressure: log BP readings, plan m
 
 ## Hard constraints (do not relax without asking)
 
-- **Pure client-side** — no backend, no server, no API calls at runtime.
+- **Pure client-side** — no backend, no server, no auth, no proprietary APIs.
+- **One narrow API exception**: a **single-product lookup against Open Food Facts** (`https://world.openfoodfacts.org/api/v2/product/{barcode}.json`) is allowed when the user scans a barcode that isn't in their local library. The result is cached into IndexedDB so subsequent scans of the same code are offline. No bulk fetches, no other endpoints, no auth.
 - **Local-only data** — IndexedDB on the user's device. JSON export/import for manual backup.
 - **Single user** — no accounts, no auth, no profiles, no sharing.
-- **Free data sources only** — **AUSNUT 2011–13** (Food Standards Australia New Zealand) for whole-food nutrients, **Open Food Facts** (Coles/Woolworths-tagged subset) for branded products. Both bundled as static JSON.
+- **Free data sources only** — **AUSNUT 2011–13** (Food Standards Australia New Zealand) for whole-food nutrients, **Open Food Facts** (Coles/Woolworths-tagged subset) for branded products. Bundled as static JSON; OFF additionally queryable per-barcode at runtime per the exception above.
 - **No third-party analytics, crash reporting, or telemetry.**
 - **Hosted as static files** — designed to deploy to GitHub Pages. No build environment beyond `npm run build`.
 

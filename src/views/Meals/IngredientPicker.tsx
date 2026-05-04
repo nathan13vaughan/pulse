@@ -3,6 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../../db";
 import { Modal } from "../../components/Modal";
 import { BarcodeScanner } from "../../components/BarcodeScanner";
+import { lookupBarcode } from "../../services/openFoodFacts";
 import {
   AISLE_LABEL,
   ingredientDisplayName,
@@ -61,12 +62,33 @@ export function IngredientPicker({ open, onClose, onAdd }: Props) {
 
   const onBarcodeDetected = async (code: string) => {
     setScannerOpen(false);
-    const match = await db.ingredients.where("barcode").equals(code).first();
-    if (match) {
-      setSelected(match);
-      setScanMessage(null);
-    } else {
-      setScanMessage(`Barcode ${code} isn't in your library yet.`);
+    setScanMessage(null);
+
+    // 1. Local cache hit?
+    const local = await db.ingredients.where("barcode").equals(code).first();
+    if (local) {
+      setSelected(local);
+      return;
+    }
+
+    // 2. Online fallback: ask Open Food Facts. Cache the result.
+    setScanMessage(`Looking up ${code} on Open Food Facts…`);
+    try {
+      const fetched = await lookupBarcode(code);
+      if (fetched) {
+        const newId = await db.ingredients.add(fetched);
+        const stored = await db.ingredients.get(Number(newId));
+        if (stored) {
+          setSelected(stored);
+          setScanMessage(`Added "${stored.name}" from Open Food Facts.`);
+          return;
+        }
+      }
+      setScanMessage(`Barcode ${code} isn't in Open Food Facts. Search manually or add it as a new ingredient.`);
+      setSearch(code);
+      setScope("branded");
+    } catch {
+      setScanMessage(`Couldn't reach Open Food Facts. Try again when you're online.`);
       setSearch(code);
       setScope("branded");
     }
