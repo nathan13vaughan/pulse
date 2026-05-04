@@ -1,0 +1,242 @@
+/* Pulse — design tokens. Warm-minimal, NOT clinical-blue. */
+
+:root {
+  /* Palette */
+  --color-bg: #f4f1ec;
+  --color-surface: #fcfbf8;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-divider: rgba(0, 0, 0, 0.06);
+
+  --color-accent: #2d5a3d;
+  --color-accent-soft: rgba(45, 90, 61, 0.12);
+
+  --color-warning: #b8543a;
+  --color-warning-soft: rgba(184, 84, 58, 0.12);
+
+  --color-amber: #d49e3a;
+  --color-amber-soft: rgba(212, 158, 58, 0.16);
+
+  --color-text-primary: #1f1f1f;
+  --color-text-secondary: #695f54;
+  --color-text-muted: #8e8478;
+
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  --fs-display: 3rem;
+  --fs-headline: 1.375rem;
+  --fs-title: 1.0625rem;
+  --fs-body: 0.9375rem;
+  --fs-caption: 0.8125rem;
+  --fs-micro: 0.6875rem;
+
+  /* Spacing */
+  --sp-xxs: 0.25rem;
+  --sp-xs: 0.5rem;
+  --sp-sm: 0.75rem;
+  --sp-md: 1rem;
+  --sp-lg: 1.5rem;
+  --sp-xl: 2rem;
+  --sp-xxl: 3rem;
+
+  /* Radii */
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 20px;
+
+  /* Transitions */
+  --t-fast: 120ms ease-out;
+  --t-base: 200ms ease-out;
+
+  /* Layout */
+  --tab-bar-height: 56px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: 1.45;
+  color: var(--color-text-primary);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+/* Shared building blocks */
+
+.card {
+  background: var(--color-surface);
+  border: 0.5px solid var(--color-border);
+  border-radius: var(--r-md);
+  padding: var(--sp-md);
+}
+
+.section-label {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.headline {
+  font-size: var(--fs-headline);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.muted {
+  color: var(--color-text-secondary);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--sp-md);
+  padding-bottom: calc(var(--tab-bar-height) + var(--safe-bottom) + var(--sp-md));
+}
+
+/* Category colour swatches — used by CategoryBadge component */
+
+.cat-normal    { color: var(--color-accent);  background: var(--color-accent-soft); }
+.cat-elevated  { color: var(--color-amber);   background: var(--color-amber-soft); }
+.cat-stage1,
+.cat-stage2,
+.cat-crisis    { color: var(--color-warning); background: var(--color-warning-soft); }
+
+.category-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Form primitives */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xxs);
+}
+
+.field-label {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.text-input,
+.textarea-input,
+.datetime-input {
+  width: 100%;
+  background: var(--color-surface);
+  border: 0.5px solid var(--color-border);
+  border-radius: var(--r-sm);
+  padding: var(--sp-sm);
+  font-size: var(--fs-body);
+  color: var(--color-text-primary);
+  transition: border-color var(--t-fast);
+}
+
+.text-input:focus,
+.textarea-input:focus,
+.datetime-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.textarea-input {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-xxs);
+  padding: var(--sp-sm) var(--sp-md);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  transition: opacity var(--t-fast), background var(--t-fast);
+}
+
+.btn--primary {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.btn--primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn--ghost {
+  color: var(--color-accent);
+}
+
+.btn--danger {
+  color: var(--color-warning);
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-sm);
+  color: var(--color-text-muted);
+  transition: color var(--t-fast), background var(--t-fast);
+}
+
+.icon-btn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-divider);
+}
