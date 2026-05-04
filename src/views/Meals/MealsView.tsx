@@ -9,7 +9,7 @@ import {
   scaleTotals,
   type NutrientTotals,
 } from "../../models/NutrientTotals";
-import { gramsEquivalent } from "../../models/MealIngredient";
+import { gramsEquivalent, type MealIngredient } from "../../models/MealIngredient";
 import { nutrientsPer100g } from "../../models/Ingredient";
 import { MealEditor } from "./MealEditor";
 import "./meals.css";
@@ -138,12 +138,13 @@ export default function MealsView() {
 }
 
 function MealCard({ meal }: { meal: Meal }) {
-  const ingredients = useLiveQuery(
-    () => meal.id !== undefined
-      ? db.mealIngredients.where("mealId").equals(meal.id).toArray()
-      : Promise.resolve([]),
+  const ingredients = useLiveQuery<MealIngredient[]>(
+    async () => {
+      if (meal.id === undefined) return [];
+      return await db.mealIngredients.where("mealId").equals(meal.id).toArray();
+    },
     [meal.id],
-    [],
+    [] as MealIngredient[],
   );
 
   const ingredientLookup = useLiveQuery<Map<number, NutrientTotals>>(

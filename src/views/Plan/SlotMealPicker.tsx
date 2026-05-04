@@ -56,8 +56,8 @@ export function SlotMealPicker({ open, onClose, date, slot, existing }: Props) {
     close();
   };
 
-  const currentMeal = useLiveQuery(
-    () => existing ? db.meals.get(existing.mealId) : Promise.resolve(undefined),
+  const currentMeal = useLiveQuery<Meal | undefined>(
+    async () => existing ? await db.meals.get(existing.mealId) : undefined,
     [existing?.mealId],
   );
 
