@@ -249,6 +249,7 @@
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
   border: 0.5px solid var(--color-border);
   border-radius: var(--r-md);
   background: var(--color-surface);

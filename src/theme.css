@@ -92,6 +92,11 @@ html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
+  /* Prevent the document itself from scrolling — only inner .scroll-area
+     containers scroll. Stops iOS Safari rubber-band from revealing the
+     browser/PWA chrome behind the app. */
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
@@ -177,6 +182,10 @@ a {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  /* Stops scroll chaining: when this container hits its boundary, iOS doesn't
+     pass the scroll up to the document (which is also why the document needs
+     overflow: hidden). Inner rubber-band still happens, which feels native. */
+  overscroll-behavior-y: contain;
   padding: var(--sp-md);
   padding-bottom: calc(var(--tab-bar-height) + var(--safe-bottom) + var(--sp-md));
 }
