@@ -13,6 +13,11 @@ interface ModalProps {
   title: string;
   primaryAction?: ModalAction;
   children: ReactNode;
+  /**
+   * When true, the sheet fills the full viewport instead of sizing to content.
+   * Use for modals that contain long lists or nest on top of other modals.
+   */
+  tall?: boolean;
 }
 
 /**
@@ -21,7 +26,7 @@ interface ModalProps {
  */
 const EXIT_DURATION_MS = 280;
 
-export function Modal({ open, onClose, title, primaryAction, children }: ModalProps) {
+export function Modal({ open, onClose, title, primaryAction, children, tall = false }: ModalProps) {
   // `mounted` controls whether the DOM exists; `closing` triggers the exit animation.
   const [mounted, setMounted] = useState(open);
   const [closing, setClosing] = useState(false);
@@ -58,7 +63,7 @@ export function Modal({ open, onClose, title, primaryAction, children }: ModalPr
   if (!mounted) return null;
 
   const overlayClass = `modal-overlay ${closing ? "modal-overlay--closing" : ""}`;
-  const sheetClass = `modal-sheet ${closing ? "modal-sheet--closing" : ""}`;
+  const sheetClass = `modal-sheet ${tall ? "modal-sheet--tall" : ""} ${closing ? "modal-sheet--closing" : ""}`;
 
   return (
     <div className={overlayClass} onClick={onClose}>

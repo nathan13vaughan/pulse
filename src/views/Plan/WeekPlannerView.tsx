@@ -4,6 +4,7 @@ import { db } from "../../db";
 import { MEAL_SLOTS, MEAL_SLOT_LABEL, type Meal, type MealSlot } from "../../models/Meal";
 import type { MealPlanEntry } from "../../models/MealPlanEntry";
 import { addDays, formatShort, isSameDay, startOfDay, startOfWeekMonday } from "../../services/dateUtils";
+import { useDeferredUnmount } from "../../services/useDeferredUnmount";
 import { SlotMealPicker } from "./SlotMealPicker";
 
 const AU_LOCALE = "en-AU";
@@ -48,6 +49,7 @@ export function WeekPlannerView() {
   }, [entries]);
 
   const [picker, setPicker] = useState<{ date: number; slot: MealSlot; existing: MealPlanEntry | null } | null>(null);
+  const pickerDeferred = useDeferredUnmount(picker, 320);
 
   const shiftWeek = (deltaDays: number) => setWeekStart(addDays(weekStart, deltaDays));
   const goToday = () => setWeekStart(startOfWeekMonday());
@@ -111,13 +113,13 @@ export function WeekPlannerView() {
         })}
       </div>
 
-      {picker ? (
+      {pickerDeferred ? (
         <SlotMealPicker
-          open={true}
+          open={Boolean(picker)}
           onClose={() => setPicker(null)}
-          date={picker.date}
-          slot={picker.slot}
-          existing={picker.existing}
+          date={pickerDeferred.date}
+          slot={pickerDeferred.slot}
+          existing={pickerDeferred.existing}
         />
       ) : null}
     </>

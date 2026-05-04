@@ -12,6 +12,7 @@ import {
 import { gramsEquivalent, type MealIngredient } from "../../models/MealIngredient";
 import { nutrientsPer100g } from "../../models/Ingredient";
 import { MealEditor } from "./MealEditor";
+import { useDeferredUnmount } from "../../services/useDeferredUnmount";
 import "./meals.css";
 
 export default function MealsView() {
@@ -24,6 +25,7 @@ export default function MealsView() {
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ id: number; isNew: boolean } | null>(null);
+  const editingDeferred = useDeferredUnmount(editing, 320);
 
   const allTags = useMemo(() => {
     const set = new Set<string>();
@@ -125,11 +127,11 @@ export default function MealsView() {
         )}
       </div>
 
-      {editing ? (
+      {editingDeferred ? (
         <MealEditor
-          mealId={editing.id}
-          isNew={editing.isNew}
-          open={true}
+          mealId={editingDeferred.id}
+          isNew={editingDeferred.isNew}
+          open={Boolean(editing)}
           onClose={() => setEditing(null)}
         />
       ) : null}

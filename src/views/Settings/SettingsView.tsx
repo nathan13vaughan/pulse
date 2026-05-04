@@ -17,6 +17,7 @@ import type { NotificationSchedule } from "../../models/NotificationSchedule";
 import { MEAL_SLOT_LABEL } from "../../models/Meal";
 import { ReminderEditor } from "./ReminderEditor";
 import { GoalsSection } from "./GoalsSection";
+import { useDeferredUnmount } from "../../services/useDeferredUnmount";
 import "./settings.css";
 
 export default function SettingsView() {
@@ -44,6 +45,7 @@ function RemindersSection() {
 
   const [permission, setPermission] = useState<NotificationStatus>(getNotificationStatus());
   const [editing, setEditing] = useState<NotificationSchedule | null>(null);
+  const editingDeferred = useDeferredUnmount(editing, 320);
 
   useEffect(() => {
     setPermission(getNotificationStatus());
@@ -134,8 +136,8 @@ function RemindersSection() {
         </div>
       </section>
 
-      {editing ? (
-        <ReminderEditor open={true} schedule={editing} onClose={() => setEditing(null)} />
+      {editingDeferred ? (
+        <ReminderEditor open={Boolean(editing)} schedule={editingDeferred} onClose={() => setEditing(null)} />
       ) : null}
     </>
   );

@@ -31,6 +31,19 @@
   animation: spring-up 420ms cubic-bezier(0.34, 1.4, 0.5, 1);
 }
 
+/* Full-height variant — sheet fills the viewport. Used for list-heavy modals
+   and any modal that may stack on top of another (so the dimmed underlying
+   modal isn't visible above this one). */
+.modal-sheet--tall {
+  height: 100dvh;
+  max-height: 100dvh;
+  margin-top: 0;
+}
+
+.modal-sheet--tall .modal-header {
+  padding-top: max(var(--sp-sm), env(safe-area-inset-top));
+}
+
 .modal-header {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -100,5 +113,13 @@
     margin-top: 0;
     max-height: 80vh;
     border-radius: var(--r-lg);
+  }
+  /* On wide screens, keep "tall" modals as centered cards rather than full-height. */
+  .modal-sheet--tall {
+    height: auto;
+    max-height: 88vh;
+  }
+  .modal-sheet--tall .modal-header {
+    padding-top: var(--sp-sm);
   }
 }

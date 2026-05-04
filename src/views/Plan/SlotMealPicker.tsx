@@ -66,6 +66,7 @@ export function SlotMealPicker({ open, onClose, date, slot, existing }: Props) {
       open={open}
       onClose={close}
       title={`${MEAL_SLOT_LABEL[slot]} — ${formatShort(date)}`}
+      tall
     >
       <div className="form-stack">
         <input

@@ -63,9 +63,14 @@ export function MealEditor({ mealId, isNew, open, onClose }: Props) {
 
   const close = () => { setNewTag(""); setPickerOpen(false); onClose(); };
 
-  const cancel = async () => {
-    if (isNew) await deleteMealCascade(mealId);
+  const cancel = () => {
     close();
+    if (isNew) {
+      // Run the cascade delete after the close animation has played out, so the
+      // modal doesn't briefly re-render in a "loading…" state when the meal row
+      // disappears mid-animation.
+      window.setTimeout(() => { void deleteMealCascade(mealId); }, 350);
+    }
   };
 
   const save = () => { if (nameValid) close(); };
@@ -119,7 +124,7 @@ export function MealEditor({ mealId, isNew, open, onClose }: Props) {
 
   if (!meal) {
     return (
-      <Modal open={open} onClose={close} title={isNew ? "New meal" : "Edit meal"}>
+      <Modal open={open} onClose={close} title={isNew ? "New meal" : "Edit meal"} tall>
         <p className="muted">Loading…</p>
       </Modal>
     );
@@ -132,6 +137,7 @@ export function MealEditor({ mealId, isNew, open, onClose }: Props) {
         onClose={cancel}
         title={isNew ? "New meal" : "Edit meal"}
         primaryAction={{ label: isNew ? "Save" : "Done", onClick: save, disabled: !nameValid }}
+        tall
       >
         <div className="form-stack">
           <div className="field">

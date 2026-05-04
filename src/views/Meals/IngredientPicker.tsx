@@ -101,7 +101,7 @@ export function IngredientPicker({ open, onClose, onAdd }: Props) {
   };
 
   return (
-    <Modal open={open} onClose={close} title="Add ingredient">
+    <Modal open={open} onClose={close} title="Add ingredient" tall>
       <div className="picker">
         <div className="picker__search">
           <div className="picker__search-row">
