@@ -73,6 +73,20 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
+  /* Disable double-tap-to-zoom and the 300ms tap delay on iOS. */
+  touch-action: manipulation;
+  /* Disable text-size auto-adjustment (iOS rotate, etc.). */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Lock the user-select for the chrome; views can opt back in. */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection inside content fields where it's actually useful. */
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 button {
@@ -178,7 +192,9 @@ a {
   border: 0.5px solid var(--color-border);
   border-radius: var(--r-sm);
   padding: var(--sp-sm);
-  font-size: var(--fs-body);
+  /* 16px minimum prevents iOS Safari from zooming on input focus, even with
+     the viewport meta locked. Below 16px iOS still tries to zoom briefly. */
+  font-size: 16px;
   color: var(--color-text-primary);
   transition: border-color var(--t-fast);
 }
