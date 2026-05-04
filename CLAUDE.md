@@ -178,6 +178,15 @@ To install on iPhone:
 3. Share → Add to Home Screen
 4. Icon now launches the PWA in fullscreen mode
 
+## Icons
+
+Currently the PWA uses a single SVG (`public/icons/icon.svg`) for both icon purposes (`any` and `maskable`). iOS Safari 17+ honours SVG home-screen icons; earlier versions fall back to a screenshot. If you want crisp PNG fallbacks for older iOS or Android launchers, generate them once with any of:
+
+- An online tool like https://realfavicongenerator.net (drop in `public/icons/icon.svg`, download the package, place `icon-192.png` / `icon-512.png` / `icon-512-maskable.png` into `public/icons/`).
+- A local one-liner: `npx pwa-asset-generator public/icons/icon.svg public/icons --type png --background "#f4f1ec"`.
+
+Then update `vite.config.ts` to add the PNG entries alongside the SVG.
+
 ## When in doubt
 
 - Prefer the simplest thing that works. This is a personal app, not a startup.
