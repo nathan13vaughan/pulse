@@ -41,10 +41,15 @@
   color: var(--color-accent);
 }
 
+.tab--active .tab__icon {
+  animation: pop 320ms var(--ease-spring);
+}
+
 .tab__icon {
   width: 22px;
   height: 22px;
   fill: currentColor;
+  transition: transform var(--t-fast);
 }
 
 .tab__label {

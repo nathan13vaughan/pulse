@@ -123,6 +123,10 @@
   color: var(--color-accent);
 }
 
+.slot-row__check--eaten svg {
+  animation: check-pop 380ms var(--ease-spring);
+}
+
 .slot-divider {
   height: 0.5px;
   background: var(--color-divider);
@@ -283,6 +287,10 @@
 
 .grocery-row--checked .grocery-row__check {
   color: var(--color-accent);
+}
+
+.grocery-row--checked .grocery-row__check svg {
+  animation: check-pop 380ms var(--ease-spring);
 }
 
 .grocery-row__main {

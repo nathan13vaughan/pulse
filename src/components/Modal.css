@@ -20,7 +20,7 @@
   border-top-left-radius: var(--r-lg);
   border-top-right-radius: var(--r-lg);
   overflow: hidden;
-  animation: modal-slide var(--t-base);
+  animation: spring-up 420ms cubic-bezier(0.34, 1.4, 0.5, 1);
 }
 
 .modal-header {
@@ -72,10 +72,7 @@
   to   { opacity: 1; }
 }
 
-@keyframes modal-slide {
-  from { transform: translateY(20px); }
-  to   { transform: translateY(0); }
-}
+/* `modal-slide` is replaced by the global `spring-up` keyframe in theme.css. */
 
 @media (min-width: 600px) {
   .modal-overlay {

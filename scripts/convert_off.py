@@ -170,13 +170,33 @@ def stream_products(path: Path) -> Iterator[dict[str, Any]]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--input", required=True, type=Path, help="Path to Open Food Facts JSONL dump (gz or plain).")
-    parser.add_argument("--out", required=True, type=Path, help="Output JSON path.")
+    parser.add_argument("--out", type=Path, default=None, help="Output JSON path (omit when using --search).")
     parser.add_argument("--limit", type=int, default=None, help="Stop after collecting N rows (testing).")
     parser.add_argument("--progress-every", type=int, default=100_000, help="Log progress every N input rows.")
+    parser.add_argument(
+        "--stores-only",
+        action="store_true",
+        help="Only keep products tagged with Coles or Woolworths as a store. Most AU products in OFF "
+             "lack store tags, so the default (without this flag) is AU-only.",
+    )
+    parser.add_argument(
+        "--search",
+        type=str,
+        default=None,
+        help="Diagnostic mode. Print every product whose name or brand contains this substring "
+             "(case-insensitive) along with their tags, then exit without writing JSON. "
+             "Useful for figuring out why a specific product was filtered out.",
+    )
     args = parser.parse_args()
 
     if not args.input.exists():
         sys.exit(f"Input file not found: {args.input}")
+
+    if args.search:
+        return run_search(args)
+
+    if args.out is None:
+        sys.exit("--out is required when not using --search.")
 
     rows: list[dict[str, Any]] = []
     seen_barcodes: set[str] = set()
@@ -189,7 +209,7 @@ def main() -> int:
 
         if not matches_australia(product):
             continue
-        if not matches_target_stores(product):
+        if args.stores_only and not matches_target_stores(product):
             continue
 
         row = slim_row(product)
@@ -207,8 +227,51 @@ def main() -> int:
     with args.out.open("w", encoding="utf-8") as f:
         json.dump(rows, f, ensure_ascii=False, separators=(",", ":"))
 
-    print(f"Scanned {scanned:,} products. Kept {len(rows):,} with Coles/Woolworths tags.")
+    filter_label = "Coles/Woolworths-tagged" if args.stores_only else "AU-tagged"
+    print(f"Scanned {scanned:,} products. Kept {len(rows):,} {filter_label}.")
     print(f"Wrote {args.out} ({args.out.stat().st_size / 1024:.1f} KB)")
+    return 0
+
+
+def run_search(args: argparse.Namespace) -> int:
+    needle = args.search.lower()
+    matches = 0
+    for product in stream_products(args.input):
+        name = (product.get("product_name") or product.get("product_name_en") or "").lower()
+        brand = (product.get("brands") or "").lower()
+        if needle not in name and needle not in brand:
+            continue
+        matches += 1
+        print(f"\n#{matches}  barcode={product.get('code')}")
+        print(f"  name:       {product.get('product_name') or product.get('product_name_en')!r}")
+        print(f"  brands:     {product.get('brands')!r}")
+        print(f"  countries:  {product.get('countries_tags')}")
+        print(f"  stores:     {product.get('stores_tags')}")
+        nutriments = product.get("nutriments") or {}
+        missing = [k for k in REQUIRED_NUTRIENTS if nutriments.get(k) is None]
+        print(f"  has all required nutrients: {not missing}" + (f"  (missing: {missing})" if missing else ""))
+
+        # Show whether each filter would let it through.
+        au = matches_australia(product)
+        stores = matches_target_stores(product)
+        verdict = []
+        if not au:
+            verdict.append("filtered: not tagged Australia")
+        if not stores:
+            verdict.append("would-be-filtered: no Coles/Woolworths store tag (only matters with --stores-only)")
+        if missing:
+            verdict.append("filtered: missing required nutrients")
+        if not verdict:
+            verdict.append("kept by default (AU-only) filter")
+        print("  verdict:    " + "; ".join(verdict))
+
+        if args.limit and matches >= args.limit:
+            break
+
+    if matches == 0:
+        print(f"No products found matching {args.search!r}. The product may not be in this OFF dump at all.")
+    else:
+        print(f"\nFound {matches} match(es) for {args.search!r}.")
     return 0
 
 

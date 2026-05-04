@@ -82,6 +82,7 @@
 .range-picker__btn--active {
   background: var(--color-accent);
   color: #fff;
+  animation: seg-pop 240ms var(--ease-spring);
 }
 
 .averages {

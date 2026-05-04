@@ -18,4 +18,5 @@
   background: var(--color-accent-soft);
   color: var(--color-accent);
   border-color: var(--color-accent);
+  animation: seg-pop 240ms var(--ease-spring);
 }
