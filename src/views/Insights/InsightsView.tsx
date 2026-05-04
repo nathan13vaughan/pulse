@@ -26,15 +26,8 @@ import {
   strengthLabel,
   type InsightPoint,
 } from "../../services/insightsAnalyzer";
+import { useChartColors, type ChartColors } from "../../services/useChartColors";
 import "./insights.css";
-
-const CHART_COLORS = {
-  accent: "#2d5a3d",
-  warning: "#b8543a",
-  amber: "#d49e3a",
-  muted: "#8e8478",
-  grid: "rgba(0, 0, 0, 0.06)",
-};
 
 const RANGES = [
   { key: "30d", label: "30D", days: 30 },
@@ -54,6 +47,7 @@ const WINDOWS: { value: number; label: string }[] = [
 export default function InsightsView() {
   const [rangeKey, setRangeKey] = useState<RangeKey>("90d");
   const [windowDays, setWindowDays] = useState<number>(3);
+  const colors = useChartColors();
 
   const allReadings = useLiveQuery(
     () => db.readings.orderBy("timestamp").toArray(),
@@ -189,6 +183,7 @@ export default function InsightsView() {
               points={points}
               xKey="sodiumMg"
               higherIsBad={true}
+              colors={colors}
             />
             <CorrelationCard
               title="Potassium ↔ Systolic"
@@ -197,6 +192,7 @@ export default function InsightsView() {
               points={points}
               xKey="potassiumMg"
               higherIsBad={false}
+              colors={colors}
             />
           </>
         )}
@@ -217,12 +213,21 @@ interface CorrelationCardProps {
   points: InsightPoint[];
   xKey: "sodiumMg" | "potassiumMg";
   higherIsBad: boolean;
+  colors: ChartColors;
 }
 
-function CorrelationCard({ title, xLabel, yLabel, points, xKey, higherIsBad }: CorrelationCardProps) {
+function CorrelationCard({ title, xLabel, yLabel, points, xKey, higherIsBad, colors }: CorrelationCardProps) {
   const xs = points.map((p) => p[xKey]);
   const ys = points.map((p) => p.bpSystolic);
   const stats = buildStats(xs, ys);
+
+  const dotColor = (category: ReturnType<typeof categoryFor>): string => {
+    switch (category) {
+      case "normal": return colors.accent;
+      case "normalHigh": return colors.amber;
+      default: return colors.warning;
+    }
+  };
 
   const scatterData = points.map((p) => ({
     x: p[xKey],
@@ -243,25 +248,25 @@ function CorrelationCard({ title, xLabel, yLabel, points, xKey, higherIsBad }: C
       <div style={{ width: "100%", height: 220 }}>
         <ResponsiveContainer>
           <ComposedChart margin={{ top: 10, right: 16, left: 0, bottom: 24 }}>
-            <CartesianGrid stroke={CHART_COLORS.grid} />
+            <CartesianGrid stroke={colors.grid} />
             <XAxis
               type="number"
               dataKey="x"
               domain={["dataMin", "dataMax"]}
-              tick={{ fontSize: 11, fill: CHART_COLORS.muted }}
-              stroke={CHART_COLORS.grid}
-              label={{ value: xLabel, position: "insideBottom", offset: -10, fontSize: 11, fill: CHART_COLORS.muted }}
+              tick={{ fontSize: 11, fill: colors.muted }}
+              stroke={colors.grid}
+              label={{ value: xLabel, position: "insideBottom", offset: -10, fontSize: 11, fill: colors.muted }}
             />
             <YAxis
               type="number"
               dataKey="y"
               domain={["dataMin - 5", "dataMax + 5"]}
-              tick={{ fontSize: 11, fill: CHART_COLORS.muted }}
-              stroke={CHART_COLORS.grid}
+              tick={{ fontSize: 11, fill: colors.muted }}
+              stroke={colors.grid}
               width={32}
             />
             <Tooltip
-              cursor={{ stroke: CHART_COLORS.grid }}
+              cursor={{ stroke: colors.grid }}
               contentStyle={{
                 background: "var(--color-surface)",
                 border: "0.5px solid var(--color-border)",
@@ -279,7 +284,7 @@ function CorrelationCard({ title, xLabel, yLabel, points, xKey, higherIsBad }: C
               <Line
                 data={lineData}
                 dataKey="y"
-                stroke={CHART_COLORS.accent}
+                stroke={colors.accent}
                 strokeWidth={2}
                 dot={false}
                 isAnimationActive={false}
@@ -307,14 +312,6 @@ function CorrelationCard({ title, xLabel, yLabel, points, xKey, higherIsBad }: C
       ) : null}
     </section>
   );
-}
-
-function dotColor(category: ReturnType<typeof categoryFor>): string {
-  switch (category) {
-    case "normal": return CHART_COLORS.accent;
-    case "normalHigh": return CHART_COLORS.amber;
-    default: return CHART_COLORS.warning;
-  }
 }
 
 function pillTone(r: number, higherIsBad: boolean): "warn" | "accent" | "normal" {

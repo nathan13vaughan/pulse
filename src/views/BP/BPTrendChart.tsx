@@ -12,15 +12,7 @@ import {
 import type { BPReading } from "../../models/BPReading";
 import { categoryFor } from "../../models/BPReading";
 import { formatShort } from "../../services/dateUtils";
-
-const CHART_COLORS = {
-  accent: "#2d5a3d",
-  accentSoft: "rgba(45, 90, 61, 0.10)",
-  warning: "#b8543a",
-  amber: "#d49e3a",
-  muted: "#8e8478",
-  grid: "rgba(0, 0, 0, 0.06)",
-};
+import { useChartColors } from "../../services/useChartColors";
 
 const RANGES = [
   { key: "7d",  label: "7D",  days: 7   },
@@ -37,6 +29,7 @@ interface Props {
 
 export function BPTrendChart({ readings }: Props) {
   const [rangeKey, setRangeKey] = useState<RangeKey>("30d");
+  const C = useChartColors();
 
   const filtered = useMemo(() => {
     const days = RANGES.find((r) => r.key === rangeKey)?.days;
@@ -91,22 +84,22 @@ export function BPTrendChart({ readings }: Props) {
           <div style={{ width: "100%", height: 220 }}>
             <ResponsiveContainer>
               <LineChart data={data} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
-                <ReferenceArea y1={60} y2={120} fill={CHART_COLORS.accentSoft} stroke="none" />
+                <CartesianGrid stroke={C.grid} vertical={false} />
+                <ReferenceArea y1={60} y2={120} fill={C.accentSoft} stroke="none" />
                 <XAxis
                   dataKey="ts"
                   type="number"
                   scale="time"
                   domain={["dataMin", "dataMax"]}
                   tickFormatter={(v) => formatShort(v)}
-                  tick={{ fontSize: 11, fill: CHART_COLORS.muted }}
-                  stroke={CHART_COLORS.grid}
+                  tick={{ fontSize: 11, fill: C.muted }}
+                  stroke={C.grid}
                 />
                 <YAxis
                   domain={[40, yMax]}
                   ticks={[40, 80, 120, 160, yMax]}
-                  tick={{ fontSize: 11, fill: CHART_COLORS.muted }}
-                  stroke={CHART_COLORS.grid}
+                  tick={{ fontSize: 11, fill: C.muted }}
+                  stroke={C.grid}
                   width={32}
                 />
                 <Tooltip
@@ -122,16 +115,16 @@ export function BPTrendChart({ readings }: Props) {
                 <Line
                   type="monotone"
                   dataKey="systolic"
-                  stroke={CHART_COLORS.accent}
+                  stroke={C.accent}
                   strokeWidth={2}
                   dot={(props: { cx?: number; cy?: number; index?: number }) => {
                     const idx = props.index ?? 0;
                     const cat = data[idx]?.category ?? "normal";
                     const colour = cat === "normal"
-                      ? CHART_COLORS.accent
+                      ? C.accent
                       : cat === "normalHigh"
-                      ? CHART_COLORS.amber
-                      : CHART_COLORS.warning;
+                      ? C.amber
+                      : C.warning;
                     return (
                       <circle
                         key={`dot-${idx}`}
@@ -148,7 +141,7 @@ export function BPTrendChart({ readings }: Props) {
                 <Line
                   type="monotone"
                   dataKey="diastolic"
-                  stroke={CHART_COLORS.muted}
+                  stroke={C.muted}
                   strokeWidth={1.5}
                   strokeDasharray="3 3"
                   dot={false}

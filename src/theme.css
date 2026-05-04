@@ -1,7 +1,7 @@
 /* Pulse — design tokens. Warm-minimal, NOT clinical-blue. */
 
 :root {
-  /* Palette */
+  /* Palette — light (default) */
   --color-bg: #f4f1ec;
   --color-surface: #fcfbf8;
   --color-border: rgba(0, 0, 0, 0.08);
@@ -20,9 +20,13 @@
   --color-text-secondary: #695f54;
   --color-text-muted: #8e8478;
 
+  /* Chart-specific colours (read at render time by Recharts components). */
+  --chart-grid: rgba(0, 0, 0, 0.06);
+  --chart-tooltip-bg: #fcfbf8;
+
   /* Typography */
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
   --fs-display: 3rem;
   --fs-headline: 1.375rem;
@@ -52,6 +56,32 @@
   /* Layout */
   --tab-bar-height: 56px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Warm-toned dark palette — matches the warm-cream feel, just inverted in luminance. */
+    --color-bg: #1c1a17;
+    --color-surface: #25221e;
+    --color-border: rgba(255, 255, 255, 0.10);
+    --color-divider: rgba(255, 255, 255, 0.07);
+
+    --color-accent: #5fa07a;
+    --color-accent-soft: rgba(95, 160, 122, 0.18);
+
+    --color-warning: #e08365;
+    --color-warning-soft: rgba(224, 131, 101, 0.18);
+
+    --color-amber: #e2b15d;
+    --color-amber-soft: rgba(226, 177, 93, 0.20);
+
+    --color-text-primary: #f0ece5;
+    --color-text-secondary: #b3aa9c;
+    --color-text-muted: #82796d;
+
+    --chart-grid: rgba(255, 255, 255, 0.08);
+    --chart-tooltip-bg: #25221e;
+  }
 }
 
 * {
@@ -139,7 +169,8 @@ a {
 
 .mono {
   font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums lining-nums slashed-zero;
+  font-feature-settings: "tnum" 1, "lnum" 1, "zero" 1, "calt" 0;
 }
 
 .scroll-area {
