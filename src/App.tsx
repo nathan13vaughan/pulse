@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { NavLink, Route, Routes } from "react-router-dom";
 import "./App.css";
 
@@ -7,6 +8,7 @@ import MealsView from "./views/Meals/MealsView";
 import PlanView from "./views/Plan/PlanView";
 import SettingsView from "./views/Settings/SettingsView";
 import InsightsView from "./views/Insights/InsightsView";
+import { startNotificationTicker, stopNotificationTicker } from "./services/notifications";
 
 interface Tab {
   to: string;
@@ -23,6 +25,11 @@ const TABS: Tab[] = [
 ];
 
 export default function App() {
+  useEffect(() => {
+    startNotificationTicker();
+    return () => stopNotificationTicker();
+  }, []);
+
   return (
     <div className="app-shell">
       <main className="app-main">

@@ -1,0 +1,203 @@
+.scroll-area > * + * { margin-top: var(--sp-lg); }
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
+}
+
+.settings-section__title {
+  margin: 0;
+  font-size: var(--fs-headline);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.settings-fineprint {
+  font-size: var(--fs-caption);
+  margin: 0;
+}
+
+.settings-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+  margin-top: var(--sp-sm);
+}
+
+.settings-block__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.settings-block__title {
+  font-size: var(--fs-title);
+  font-weight: 500;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.settings-empty {
+  font-size: var(--fs-caption);
+  margin: 0;
+}
+
+.settings-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--color-surface);
+  border: 0.5px solid var(--color-border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-sm) var(--sp-md);
+  border-bottom: 0.5px solid var(--color-divider);
+  gap: var(--sp-sm);
+}
+.settings-row:last-child { border-bottom: none; }
+
+.settings-row__main {
+  flex: 1;
+  text-align: left;
+  background: none;
+  padding: 0;
+}
+
+.settings-row__time {
+  font-size: var(--fs-headline);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.settings-row__sub {
+  font-size: var(--fs-caption);
+  margin-top: 2px;
+}
+
+.settings-row__slot {
+  font-size: var(--fs-micro);
+  margin-top: 2px;
+}
+
+.settings-cta {
+  text-align: center;
+  cursor: pointer;
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.settings-ok {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.settings-warn {
+  color: var(--color-warning);
+}
+
+/* Weekday picker (used by ReminderEditor) */
+
+.weekday-row {
+  display: flex;
+  gap: var(--sp-xs);
+}
+
+.weekday-btn {
+  flex: 1;
+  height: 38px;
+  border-radius: 50%;
+  border: 0.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+
+.weekday-btn--active {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
+/* Toggle row (label + checkbox) */
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-sm);
+  padding: var(--sp-sm) 0;
+}
+
+.toggle-row--inline {
+  padding: 0;
+}
+
+.toggle-row input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 44px;
+  height: 26px;
+  background: var(--color-divider);
+  border-radius: 999px;
+  position: relative;
+  transition: background var(--t-base);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.toggle-row input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  background: white;
+  border-radius: 50%;
+  transition: transform var(--t-base);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-row input[type="checkbox"]:checked {
+  background: var(--color-accent);
+}
+
+.toggle-row input[type="checkbox"]:checked::after {
+  transform: translateX(18px);
+}
+
+/* Data section */
+
+.settings-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+}
+
+.settings-status {
+  font-size: var(--fs-caption);
+  margin: 0;
+}
+
+/* Install steps */
+
+.settings-steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+}
+
+.settings-steps li {
+  font-size: var(--fs-body);
+  color: var(--color-text-secondary);
+}
