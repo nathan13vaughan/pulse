@@ -220,6 +220,28 @@
   gap: var(--sp-xs);
 }
 
+.picker__search-row {
+  display: flex;
+  gap: var(--sp-xs);
+  align-items: center;
+}
+
+.picker__search-row .text-input {
+  flex: 1;
+}
+
+.picker__scan {
+  width: 40px;
+  height: 40px;
+  border: 0.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-accent);
+}
+
+.picker__scan-msg {
+  font-size: var(--fs-caption);
+}
+
 .picker__list {
   list-style: none;
   margin: 0;

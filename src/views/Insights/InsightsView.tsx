@@ -312,7 +312,7 @@ function CorrelationCard({ title, xLabel, yLabel, points, xKey, higherIsBad }: C
 function dotColor(category: ReturnType<typeof categoryFor>): string {
   switch (category) {
     case "normal": return CHART_COLORS.accent;
-    case "elevated": return CHART_COLORS.amber;
+    case "normalHigh": return CHART_COLORS.amber;
     default: return CHART_COLORS.warning;
   }
 }

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../../db";
 import { Modal } from "../../components/Modal";
+import { BarcodeScanner } from "../../components/BarcodeScanner";
 import {
   AISLE_LABEL,
   ingredientDisplayName,
@@ -31,6 +32,8 @@ export function IngredientPicker({ open, onClose, onAdd }: Props) {
   const [selected, setSelected] = useState<Ingredient | null>(null);
   const [quantity, setQuantity] = useState(100);
   const [unit, setUnit] = useState<MeasurementUnit>("g");
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scanMessage, setScanMessage] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -51,9 +54,23 @@ export function IngredientPicker({ open, onClose, onAdd }: Props) {
     setSelected(null);
     setQuantity(100);
     setUnit("g");
+    setScanMessage(null);
   };
 
   const close = () => { reset(); onClose(); };
+
+  const onBarcodeDetected = async (code: string) => {
+    setScannerOpen(false);
+    const match = await db.ingredients.where("barcode").equals(code).first();
+    if (match) {
+      setSelected(match);
+      setScanMessage(null);
+    } else {
+      setScanMessage(`Barcode ${code} isn't in your library yet.`);
+      setSearch(code);
+      setScope("branded");
+    }
+  };
 
   const confirmAdd = () => {
     if (!selected) return;
@@ -65,13 +82,27 @@ export function IngredientPicker({ open, onClose, onAdd }: Props) {
     <Modal open={open} onClose={close} title="Add ingredient">
       <div className="picker">
         <div className="picker__search">
-          <input
-            className="text-input"
-            placeholder="Search name, brand, or barcode"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            autoFocus
-          />
+          <div className="picker__search-row">
+            <input
+              className="text-input"
+              placeholder="Search name, brand, or barcode"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autoFocus
+            />
+            <button
+              type="button"
+              className="icon-btn picker__scan"
+              onClick={() => setScannerOpen(true)}
+              aria-label="Scan barcode"
+              title="Scan barcode"
+            >
+              <ScanIcon />
+            </button>
+          </div>
+          {scanMessage ? (
+            <div className="muted picker__scan-msg">{scanMessage}</div>
+          ) : null}
           <div className="seg">
             {(["all", "whole", "branded"] as Scope[]).map((s) => (
               <button
@@ -128,7 +159,25 @@ export function IngredientPicker({ open, onClose, onAdd }: Props) {
           />
         ) : null}
       </div>
+
+      <BarcodeScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onDetected={onBarcodeDetected}
+      />
     </Modal>
+  );
+}
+
+function ScanIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+      <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+      <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+      <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+      <path d="M7 8v8M11 8v8M15 8v8" />
+    </svg>
   );
 }
 

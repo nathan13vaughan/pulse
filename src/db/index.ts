@@ -5,6 +5,7 @@ import type { Meal } from "../models/Meal";
 import type { MealIngredient } from "../models/MealIngredient";
 import type { MealPlanEntry } from "../models/MealPlanEntry";
 import type { NotificationSchedule } from "../models/NotificationSchedule";
+import type { GroceryCheck } from "../models/GroceryCheck";
 
 class PulseDB extends Dexie {
   readings!: Table<BPReading, number>;
@@ -13,13 +14,11 @@ class PulseDB extends Dexie {
   mealIngredients!: Table<MealIngredient, number>;
   mealPlan!: Table<MealPlanEntry, number>;
   notificationSchedules!: Table<NotificationSchedule, number>;
+  groceryChecks!: Table<GroceryCheck, [number, number]>;
 
   constructor() {
     super("pulse");
 
-    // Index strategy:
-    // - `++id` auto-increments primary keys
-    // - secondary indexes only on fields we filter or sort by
     this.version(1).stores({
       readings: "++id, timestamp",
       ingredients: "++id, name, brand, barcode, publicFoodKey, aisle",
@@ -27,6 +26,11 @@ class PulseDB extends Dexie {
       mealIngredients: "++id, mealId, ingredientId",
       mealPlan: "++id, [date+slot], date, slot, mealId",
       notificationSchedules: "++id, type, isEnabled",
+    });
+
+    // v2 — persistent grocery ticks per week.
+    this.version(2).stores({
+      groceryChecks: "[weekStart+ingredientId], weekStart, ingredientId",
     });
   }
 }

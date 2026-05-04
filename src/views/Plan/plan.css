@@ -209,7 +209,19 @@
   gap: var(--sp-xs);
 }
 
+.grocery-progress__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-sm);
+}
+
 .grocery-progress__label {
+  font-size: var(--fs-caption);
+}
+
+.grocery-progress__clear {
+  padding: 2px 8px;
   font-size: var(--fs-caption);
 }
 

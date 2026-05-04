@@ -6,6 +6,7 @@ import { AISLE_LABEL, type Ingredient } from "../../models/Ingredient";
 import type { Meal } from "../../models/Meal";
 import type { MealIngredient } from "../../models/MealIngredient";
 import type { MealPlanEntry } from "../../models/MealPlanEntry";
+import type { GroceryCheck } from "../../models/GroceryCheck";
 import { addDays, formatShort, startOfWeekMonday } from "../../services/dateUtils";
 import { aggregate, displayQuantity, grouped, type GroceryLine } from "../../services/groceryAggregator";
 
@@ -16,7 +17,16 @@ export function GroceryListView() {
   const weekEnd = addDays(weekStart, 7);
 
   const [hideEaten, setHideEaten] = useState(true);
-  const [checked, setChecked] = useState<Set<number>>(() => new Set());
+
+  const checkedRows = useLiveQuery(
+    () => db.groceryChecks.where("weekStart").equals(weekStart).toArray(),
+    [weekStart],
+    [] as GroceryCheck[],
+  );
+  const checked = useMemo(
+    () => new Set(checkedRows.map((c) => c.ingredientId)),
+    [checkedRows],
+  );
 
   const entries = useLiveQuery(
     () => db.mealPlan.where("date").between(weekStart, weekEnd, true, false).toArray(),
@@ -88,12 +98,17 @@ export function GroceryListView() {
   const totalCount = lines.length;
   const checkedCount = lines.filter((l) => l.ingredient.id !== undefined && checked.has(l.ingredient.id)).length;
 
-  const toggle = (id: number) => {
-    setChecked((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
+  const toggle = async (id: number) => {
+    const exists = await db.groceryChecks.get([weekStart, id]);
+    if (exists) {
+      await db.groceryChecks.delete([weekStart, id]);
+    } else {
+      await db.groceryChecks.add({ weekStart, ingredientId: id });
+    }
+  };
+
+  const clearAll = async () => {
+    await db.groceryChecks.where("weekStart").equals(weekStart).delete();
   };
 
   const weekLabel = `${formatShort(weekStart)} – ${formatShort(addDays(weekStart, 6))}`;
@@ -134,8 +149,15 @@ export function GroceryListView() {
         ) : (
           <>
             <div className="grocery-progress card">
-              <div className="grocery-progress__label muted">
-                {checkedCount} of {totalCount} ticked
+              <div className="grocery-progress__row">
+                <span className="grocery-progress__label muted">
+                  {checkedCount} of {totalCount} ticked
+                </span>
+                {checkedCount > 0 ? (
+                  <button type="button" className="btn btn--ghost grocery-progress__clear" onClick={clearAll}>
+                    Clear
+                  </button>
+                ) : null}
               </div>
               <progress max={totalCount} value={checkedCount} className="grocery-progress__bar" />
             </div>

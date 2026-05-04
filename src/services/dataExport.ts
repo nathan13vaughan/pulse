@@ -5,8 +5,13 @@ import type { Meal } from "../models/Meal";
 import type { MealIngredient } from "../models/MealIngredient";
 import type { MealPlanEntry } from "../models/MealPlanEntry";
 import type { NotificationSchedule } from "../models/NotificationSchedule";
+import type { GroceryCheck } from "../models/GroceryCheck";
 
-export const EXPORT_VERSION = 1;
+/**
+ * Bumped to 2 when the groceryChecks table was added.
+ * Older v1 backups still import — we just skip the missing field.
+ */
+export const EXPORT_VERSION = 2;
 
 export interface PulseExport {
   version: number;
@@ -17,17 +22,20 @@ export interface PulseExport {
   mealIngredients: MealIngredient[];
   mealPlan: MealPlanEntry[];
   notificationSchedules: NotificationSchedule[];
+  groceryChecks?: GroceryCheck[]; // optional — older backups predate this table
 }
 
 export async function gatherExport(): Promise<PulseExport> {
-  const [readings, ingredients, meals, mealIngredients, mealPlan, notificationSchedules] = await Promise.all([
-    db.readings.toArray(),
-    db.ingredients.toArray(),
-    db.meals.toArray(),
-    db.mealIngredients.toArray(),
-    db.mealPlan.toArray(),
-    db.notificationSchedules.toArray(),
-  ]);
+  const [readings, ingredients, meals, mealIngredients, mealPlan, notificationSchedules, groceryChecks] =
+    await Promise.all([
+      db.readings.toArray(),
+      db.ingredients.toArray(),
+      db.meals.toArray(),
+      db.mealIngredients.toArray(),
+      db.mealPlan.toArray(),
+      db.notificationSchedules.toArray(),
+      db.groceryChecks.toArray(),
+    ]);
   return {
     version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
@@ -37,6 +45,7 @@ export async function gatherExport(): Promise<PulseExport> {
     mealIngredients,
     mealPlan,
     notificationSchedules,
+    groceryChecks,
   };
 }
 
@@ -60,12 +69,17 @@ export async function downloadExport(): Promise<void> {
  * Caller is responsible for confirming the wipe with the user first.
  */
 export async function replaceFromExport(data: PulseExport): Promise<void> {
-  if (data.version !== EXPORT_VERSION) {
-    throw new Error(`Unsupported export version ${data.version}, expected ${EXPORT_VERSION}.`);
+  if (data.version > EXPORT_VERSION) {
+    throw new Error(
+      `Backup is from a newer version (${data.version}); this app supports up to ${EXPORT_VERSION}.`,
+    );
   }
   await db.transaction(
     "rw",
-    [db.readings, db.ingredients, db.meals, db.mealIngredients, db.mealPlan, db.notificationSchedules],
+    [
+      db.readings, db.ingredients, db.meals, db.mealIngredients,
+      db.mealPlan, db.notificationSchedules, db.groceryChecks,
+    ],
     async () => {
       await Promise.all([
         db.readings.clear(),
@@ -74,6 +88,7 @@ export async function replaceFromExport(data: PulseExport): Promise<void> {
         db.mealIngredients.clear(),
         db.mealPlan.clear(),
         db.notificationSchedules.clear(),
+        db.groceryChecks.clear(),
       ]);
       // Preserve all IDs so foreign-key references (mealId, ingredientId)
       // stay valid. Tables were just cleared, so collisions aren't possible.
@@ -84,6 +99,7 @@ export async function replaceFromExport(data: PulseExport): Promise<void> {
         db.mealIngredients.bulkAdd(data.mealIngredients),
         db.mealPlan.bulkAdd(data.mealPlan),
         db.notificationSchedules.bulkAdd(data.notificationSchedules),
+        db.groceryChecks.bulkAdd(data.groceryChecks ?? []),
       ]);
     },
   );

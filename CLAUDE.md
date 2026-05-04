@@ -26,6 +26,7 @@ Close the feedback loop between diet and blood pressure: log BP readings, plan m
 - **React Router (HashRouter)** — works on GitHub Pages without server config
 - **Dexie** — IndexedDB wrapper for persistence
 - **Recharts** — charts (BP trends, insights scatter)
+- **@zxing/browser** — barcode scanner (camera-based EAN/UPC lookup, used by ingredient picker)
 - **vite-plugin-pwa** — manifest + service worker for installability
 - **CSS variables for theming** — no Tailwind, no styled-components; plain CSS Modules or scoped CSS
 
@@ -35,12 +36,13 @@ Rationale: smallest viable stack for a personal PWA. Dexie because raw IndexedDB
 
 TypeScript types under `src/models/`. Stored in IndexedDB tables matching the model names. **Do NOT redesign without asking.**
 
-- `BPReading` — `id`, `timestamp`, `systolic`, `diastolic`, `pulse?`, `contextTags[]`, `notes?`. Has computed `category` (currently AHA bands; **planned switch** to Australian Heart Foundation bands — see "BP categories" below).
+- `BPReading` — `id`, `timestamp`, `systolic`, `diastolic`, `pulse?`, `contextTags[]`, `notes?`. Computed `category` uses the Australian Heart Foundation bands — see "BP categories" below.
 - `Ingredient` — `id`, `name`, `brand?`, `barcode?`, `publicFoodKey?`, `aisle`, all nutrients per **100g** for normalisation. Energy stored as both kJ (primary) and kcal (secondary).
 - `Meal` — `id`, `name`, `tags[]`, `servings`, `defaultSlot`. `nutrientsPerServing` rolls up from ingredients.
 - `MealIngredient` — `id`, `mealId`, `ingredientId`, `quantity`, `unit`. `gramsEquivalent` handles unit conversion.
 - `MealPlanEntry` — `id`, `date` (start-of-day epoch ms), `slot`, `mealId`, `servings`, `wasEaten`.
 - `NotificationSchedule` — `id`, `type`, `hour`, `minute`, `weekdays[]` (0=Sun…6=Sat — JS convention, NOT Calendar's 1-based one), `mealSlot?`, `isEnabled`, `customMessage?`.
+- `GroceryCheck` — compound key `[weekStart+ingredientId]`. One row per ticked item per week; persists across reloads.
 
 Helpers:
 
@@ -66,14 +68,17 @@ Web Push API + service worker. Major platform constraints:
 
 ## BP categories
 
-- **Currently** using AHA bands (normal/elevated/stage1/stage2/crisis) as a placeholder.
-- **Planned switch** to Australian Heart Foundation bands when this lands:
-  - Normal: <120/80
-  - Normal-high: 120–139 / 80–89
-  - Grade 1 hypertension: 140–159 / 90–99
-  - Grade 2: 160–179 / 100–109
-  - Grade 3: ≥180/110 (or either)
-- The AU scheme has no "elevated" tier — switching will require restructuring `BPCategory` and the trend chart's healthy-zone overlay. Don't switch without asking.
+Australian Heart Foundation bands (Guideline for the diagnosis and management of hypertension in adults — 2016, reaffirmed 2023). `BPCategory` values are camelCase TypeScript literals.
+
+| Tier | Systolic | Diastolic |
+|---|---|---|
+| `normal` | <120 | <80 |
+| `normalHigh` | 120–139 | 80–89 |
+| `grade1` | 140–159 | 90–99 |
+| `grade2` | 160–179 | 100–109 |
+| `grade3` | ≥180 | ≥110 |
+
+Whichever value (sys or dia) lands in the higher tier wins. Colour mapping: `normal` = accent green, `normalHigh` = amber, `grade1`/`2`/`3` = warning terracotta. Healthy-zone band on the trend chart is 60–120 (matches AU "normal" upper bound).
 
 ## Aesthetic direction
 
@@ -85,7 +90,7 @@ Warm-minimal, NOT clinical-blue health-app style.
 - Generous whitespace, large display numerals for BP and key nutrients
 - System font stack (`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto`) — SF on iOS Safari, native font elsewhere
 - Card-based layout with subtle borders, not heavy shadows
-- BP category colour-coding: normal=green, elevated/normal-high=amber, stage1/2/grade1+=red
+- BP category colour-coding: `normal`=green, `normalHigh`=amber, `grade1`/`grade2`/`grade3`=red
 
 ## Build order
 
@@ -161,7 +166,7 @@ Warm-minimal, NOT clinical-blue health-app style.
 - Don't replace Dexie with a heavier stack like Realm, RxDB, etc.
 - Don't add ads, analytics, or telemetry.
 - Don't add medication-dose calculations or anything that could be construed as medical advice. The app surfaces data; it does not prescribe.
-- Don't auto-categorise BP readings beyond the bands already in `BPCategory` (currently AHA; AU bands deferred — see "BP categories").
+- Don't auto-categorise BP readings beyond the AU Heart Foundation bands already in `BPCategory`. If you ever need to support multiple national guidelines, model that as separate enums and a chooser, not by overloading these values.
 - Don't add unit tests speculatively — only when asked, and only for non-UI logic (aggregators, unit conversions, suppression rules).
 - Don't pull in Tailwind, MUI, Chakra, or any heavy UI library. The visual language is custom and small.
 

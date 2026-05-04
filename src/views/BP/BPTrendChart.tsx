@@ -129,7 +129,7 @@ export function BPTrendChart({ readings }: Props) {
                     const cat = data[idx]?.category ?? "normal";
                     const colour = cat === "normal"
                       ? CHART_COLORS.accent
-                      : cat === "elevated"
+                      : cat === "normalHigh"
                       ? CHART_COLORS.amber
                       : CHART_COLORS.warning;
                     return (
