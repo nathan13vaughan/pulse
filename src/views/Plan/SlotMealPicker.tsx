@@ -73,7 +73,6 @@ export function SlotMealPicker({ open, onClose, date, slot, existing }: Props) {
           placeholder="Search meals"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          autoFocus
         />
 
         {existing && currentMeal ? (
