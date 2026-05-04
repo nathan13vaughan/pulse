@@ -32,3 +32,11 @@ class PulseDB extends Dexie {
 }
 
 export const db = new PulseDB();
+
+/** Delete a meal and all its `MealIngredient` rows in one transaction. */
+export async function deleteMealCascade(mealId: number): Promise<void> {
+  await db.transaction("rw", db.meals, db.mealIngredients, async () => {
+    await db.mealIngredients.where("mealId").equals(mealId).delete();
+    await db.meals.delete(mealId);
+  });
+}
