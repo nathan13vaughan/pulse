@@ -1,0 +1,121 @@
+.dash-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-md);
+}
+
+.dash-greeting {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.dash-date {
+  font-size: var(--fs-caption);
+}
+
+.dash-bp-numbers {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: var(--sp-xs);
+}
+
+.dash-bp-sys, .dash-bp-dia {
+  font-size: 3rem;
+  font-weight: 200;
+  line-height: 1;
+}
+
+.dash-bp-slash {
+  font-size: 2rem;
+  font-weight: 200;
+  color: var(--color-text-muted);
+  margin: 0 4px;
+}
+
+.dash-bp-unit {
+  font-size: var(--fs-caption);
+  color: var(--color-text-muted);
+  margin-left: var(--sp-xs);
+}
+
+.dash-bp-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  margin-top: var(--sp-xs);
+}
+
+.dash-bp-log {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  margin-top: var(--sp-sm);
+  padding: 0;
+}
+
+.dash-metrics {
+  display: flex;
+  gap: var(--sp-xl);
+  margin-top: var(--sp-xs);
+}
+
+.dash-stat-value {
+  font-size: var(--fs-headline);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-top: 2px;
+}
+
+.dash-stat-value--warn {
+  color: var(--color-warning);
+}
+
+.dash-plan-list {
+  list-style: none;
+  margin: var(--sp-xs) 0 0;
+  padding: 0;
+}
+
+.dash-plan-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-md);
+  padding: var(--sp-xs) 0;
+  border-bottom: 0.5px solid var(--color-divider);
+}
+
+.dash-plan-row:last-child {
+  border-bottom: none;
+}
+
+.dash-plan-slot {
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.dash-plan-meal {
+  font-size: var(--fs-body);
+  color: var(--color-text-primary);
+}
+
+.dash-plan-meal--eaten {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--color-text-muted);
+}
+
+.dash-insights-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-sm);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  transition: background var(--t-fast);
+}
+
+.dash-insights-link:hover {
+  background: var(--color-divider);
+}

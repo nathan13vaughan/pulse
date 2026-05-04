@@ -1,0 +1,52 @@
+.scroll-area > * + * { margin-top: var(--sp-md); }
+
+.insights-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.insights-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
+}
+
+.insights-stats {
+  display: flex;
+  gap: var(--sp-xl);
+  padding-top: var(--sp-xs);
+}
+
+.insights-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.insights-pill__value {
+  font-size: var(--fs-headline);
+  font-weight: 500;
+}
+
+.insights-pill__value--normal { color: var(--color-text-primary); }
+.insights-pill__value--accent { color: var(--color-accent); }
+.insights-pill__value--warn   { color: var(--color-warning); }
+
+.insights-narrative {
+  margin: 0;
+  font-size: var(--fs-caption);
+}
+
+.insights-disclaimer {
+  font-size: var(--fs-micro);
+  color: var(--color-text-muted);
+  margin: var(--sp-md) 0 0;
+}
+
+.view-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--sp-sm);
+}

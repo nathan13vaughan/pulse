@@ -6,6 +6,7 @@ import BPView from "./views/BP/BPView";
 import MealsView from "./views/Meals/MealsView";
 import PlanView from "./views/Plan/PlanView";
 import SettingsView from "./views/Settings/SettingsView";
+import InsightsView from "./views/Insights/InsightsView";
 
 interface Tab {
   to: string;
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/bp/*"      element={<BPView />} />
           <Route path="/meals/*"   element={<MealsView />} />
           <Route path="/plan/*"    element={<PlanView />} />
+          <Route path="/insights"  element={<InsightsView />} />
           <Route path="/settings"  element={<SettingsView />} />
         </Routes>
       </main>
