@@ -187,6 +187,48 @@
   margin: 0;
 }
 
+/* Goals */
+
+.goals-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+  margin: var(--sp-xs) 0 var(--sp-sm);
+}
+
+.goals-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-sm);
+  padding: var(--sp-xs) var(--sp-sm);
+  background: var(--color-surface);
+  border: 0.5px solid var(--color-border);
+  border-radius: var(--r-sm);
+}
+
+.goals-row__label {
+  font-size: var(--fs-body);
+  color: var(--color-text-primary);
+}
+
+.goals-row__field {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-xs);
+}
+
+.goals-row__input {
+  width: 90px;
+  text-align: right;
+  padding: 6px 10px;
+}
+
+.goals-row__suffix {
+  font-size: var(--fs-caption);
+  white-space: nowrap;
+}
+
 /* Install steps */
 
 .settings-steps {

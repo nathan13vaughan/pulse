@@ -6,6 +6,8 @@ import type { MealIngredient } from "../models/MealIngredient";
 import type { MealPlanEntry } from "../models/MealPlanEntry";
 import type { NotificationSchedule } from "../models/NotificationSchedule";
 import type { GroceryCheck } from "../models/GroceryCheck";
+import type { Goals } from "../models/Goals";
+import { defaultGoals } from "../models/Goals";
 
 class PulseDB extends Dexie {
   readings!: Table<BPReading, number>;
@@ -15,6 +17,7 @@ class PulseDB extends Dexie {
   mealPlan!: Table<MealPlanEntry, number>;
   notificationSchedules!: Table<NotificationSchedule, number>;
   groceryChecks!: Table<GroceryCheck, [number, number]>;
+  goals!: Table<Goals, number>;
 
   constructor() {
     super("pulse");
@@ -32,6 +35,11 @@ class PulseDB extends Dexie {
     this.version(2).stores({
       groceryChecks: "[weekStart+ingredientId], weekStart, ingredientId",
     });
+
+    // v3 — goals singleton (id always 1).
+    this.version(3).stores({
+      goals: "id",
+    });
   }
 }
 
@@ -43,4 +51,15 @@ export async function deleteMealCascade(mealId: number): Promise<void> {
     await db.mealIngredients.where("mealId").equals(mealId).delete();
     await db.meals.delete(mealId);
   });
+}
+
+/** Read the singleton goals row, falling back to sensible AU defaults if unset. */
+export async function getGoals(): Promise<Goals> {
+  const stored = await db.goals.get(1);
+  return stored ?? defaultGoals();
+}
+
+/** Persist the singleton goals row (always id=1). */
+export async function saveGoals(goals: Omit<Goals, "id">): Promise<void> {
+  await db.goals.put({ ...goals, id: 1 });
 }

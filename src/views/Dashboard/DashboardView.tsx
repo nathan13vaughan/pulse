@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../../db";
 import { categoryFor, type BPReading } from "../../models/BPReading";
+import { defaultGoals, type Goals } from "../../models/Goals";
 import { CategoryBadge } from "../../components/CategoryBadge";
 import { BPLogModal } from "../BP/BPLogModal";
 import {
@@ -38,6 +39,8 @@ export default function DashboardView() {
     [],
     [] as BPReading[],
   );
+
+  const goals: Goals = useLiveQuery(() => db.goals.get(1), [], undefined) ?? defaultGoals();
 
   const todayReadings = useMemo(
     () => readings.filter((r) => isSameDay(r.timestamp, todayStart)),
@@ -91,7 +94,7 @@ export default function DashboardView() {
             onLog={() => setLogOpen(true)}
           />
 
-          <WeekAveragesCard readings={weekReadings} />
+          <WeekAveragesCard readings={weekReadings} goals={goals} />
 
           <TodayPlanCard
             entries={todayPlan}
@@ -103,9 +106,32 @@ export default function DashboardView() {
               <div className="section-label">Eaten this week (daily avg)</div>
               <div className="dash-metrics">
                 <Stat title="kJ" value={Math.round(dailyAvg.energyKj)} />
-                <Stat title="Sodium" value={`${Math.round(dailyAvg.sodiumMg)} mg`} warn={sodiumWarn} />
-                <Stat title="Potassium" value={`${Math.round(dailyAvg.potassiumMg)} mg`} />
+                <Stat
+                  title="Sodium"
+                  value={`${Math.round(dailyAvg.sodiumMg)} mg`}
+                  warn={
+                    goals.targetSodiumMg !== undefined
+                      ? dailyAvg.sodiumMg > goals.targetSodiumMg
+                      : sodiumWarn
+                  }
+                />
+                <Stat
+                  title="Potassium"
+                  value={`${Math.round(dailyAvg.potassiumMg)} mg`}
+                  warn={
+                    goals.targetPotassiumMg !== undefined &&
+                    dailyAvg.potassiumMg < goals.targetPotassiumMg
+                  }
+                />
               </div>
+              {(goals.targetSodiumMg !== undefined || goals.targetPotassiumMg !== undefined) ? (
+                <p className="muted dash-goal-line">
+                  Goal:{" "}
+                  {goals.targetSodiumMg !== undefined ? `Na ≤ ${goals.targetSodiumMg} mg` : null}
+                  {goals.targetSodiumMg !== undefined && goals.targetPotassiumMg !== undefined ? " · " : null}
+                  {goals.targetPotassiumMg !== undefined ? `K ≥ ${goals.targetPotassiumMg} mg` : null}
+                </p>
+              ) : null}
             </section>
           ) : (
             <section className="card">
@@ -186,7 +212,7 @@ function TodayBPCard({
   );
 }
 
-function WeekAveragesCard({ readings }: { readings: BPReading[] }) {
+function WeekAveragesCard({ readings, goals }: { readings: BPReading[]; goals: Goals }) {
   if (readings.length === 0) {
     return (
       <section className="card">
@@ -194,19 +220,44 @@ function WeekAveragesCard({ readings }: { readings: BPReading[] }) {
         <p className="muted" style={{ margin: "var(--sp-xs) 0 0" }}>
           No readings logged this week.
         </p>
+        {goals.targetReadingsPerWeek !== undefined ? (
+          <p className="muted dash-goal-line">
+            Goal: {goals.targetReadingsPerWeek} readings / week
+          </p>
+        ) : null}
       </section>
     );
   }
   const sysAvg = Math.round(readings.reduce((a, r) => a + r.systolic, 0) / readings.length);
   const diaAvg = Math.round(readings.reduce((a, r) => a + r.diastolic, 0) / readings.length);
+  const sysWarn = goals.targetSystolic !== undefined && sysAvg > goals.targetSystolic;
+  const diaWarn = goals.targetDiastolic !== undefined && diaAvg > goals.targetDiastolic;
+  const readsWarn =
+    goals.targetReadingsPerWeek !== undefined && readings.length < goals.targetReadingsPerWeek;
+
+  const goalParts: string[] = [];
+  if (goals.targetSystolic !== undefined && goals.targetDiastolic !== undefined) {
+    goalParts.push(`BP < ${goals.targetSystolic}/${goals.targetDiastolic}`);
+  } else if (goals.targetSystolic !== undefined) {
+    goalParts.push(`Sys < ${goals.targetSystolic}`);
+  } else if (goals.targetDiastolic !== undefined) {
+    goalParts.push(`Dia < ${goals.targetDiastolic}`);
+  }
+  if (goals.targetReadingsPerWeek !== undefined) {
+    goalParts.push(`${goals.targetReadingsPerWeek} readings / wk`);
+  }
+
   return (
     <section className="card">
       <div className="section-label">Last 7 days</div>
       <div className="dash-metrics">
-        <Stat title="Avg sys" value={sysAvg} />
-        <Stat title="Avg dia" value={diaAvg} />
-        <Stat title="Readings" value={readings.length} />
+        <Stat title="Avg sys" value={sysAvg} warn={sysWarn} />
+        <Stat title="Avg dia" value={diaAvg} warn={diaWarn} />
+        <Stat title="Readings" value={readings.length} warn={readsWarn} />
       </div>
+      {goalParts.length > 0 ? (
+        <p className="muted dash-goal-line">Goal: {goalParts.join(" · ")}</p>
+      ) : null}
     </section>
   );
 }

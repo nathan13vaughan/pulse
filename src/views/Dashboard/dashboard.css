@@ -72,6 +72,12 @@
   color: var(--color-warning);
 }
 
+.dash-goal-line {
+  font-size: var(--fs-micro);
+  margin: var(--sp-xs) 0 0;
+  letter-spacing: 0.02em;
+}
+
 .dash-plan-list {
   list-style: none;
   margin: var(--sp-xs) 0 0;
