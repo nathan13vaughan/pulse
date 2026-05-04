@@ -9,6 +9,7 @@ import PlanView from "./views/Plan/PlanView";
 import { GroceryListView } from "./views/Plan/GroceryListView";
 import SettingsView from "./views/Settings/SettingsView";
 import InsightsView from "./views/Insights/InsightsView";
+import TipsView from "./views/Tips/TipsView";
 import { startNotificationTicker, stopNotificationTicker } from "./services/notifications";
 
 interface Tab {
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="/plan"      element={<PlanView />} />
           <Route path="/grocery"   element={<GroceryListView />} />
           <Route path="/insights"  element={<InsightsView />} />
+          <Route path="/tips"      element={<TipsView />} />
           <Route path="/settings"  element={<SettingsView />} />
         </Routes>
       </main>

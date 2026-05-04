@@ -1,0 +1,67 @@
+.scroll-area > * + * { margin-top: var(--sp-md); }
+
+.tips-banner {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-text-primary);
+}
+
+.tips-banner strong {
+  font-size: var(--fs-body);
+  color: var(--color-accent);
+}
+
+.tips-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+}
+
+.tips-card__title {
+  margin: 0;
+  font-size: var(--fs-headline);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.tips-card__body {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.tips-card__why {
+  margin: var(--sp-xxs) 0 0;
+  font-size: var(--fs-caption);
+  line-height: 1.45;
+}
+
+.tips-card__why-label {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: var(--fs-micro);
+  margin-right: 4px;
+}
+
+.tips-sources {
+  margin-top: var(--sp-lg);
+  padding: 0 var(--sp-xs);
+}
+
+.tips-sources__list {
+  list-style: none;
+  margin: var(--sp-xs) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+}
+
+.tips-sources__list a {
+  font-size: var(--fs-caption);
+  color: var(--color-accent);
+  word-break: break-word;
+}

@@ -125,6 +125,16 @@ export default function DashboardView() {
             </div>
             <ChevronRight />
           </Link>
+
+          <Link to="/tips" className="card dash-insights-link">
+            <div>
+              <div style={{ fontSize: "var(--fs-headline)", fontWeight: 600 }}>Lifestyle tips</div>
+              <div className="muted" style={{ fontSize: "var(--fs-caption)" }}>
+                General BP-management info from Heart Foundation Australia
+              </div>
+            </div>
+            <ChevronRight />
+          </Link>
         </div>
       </div>
 
