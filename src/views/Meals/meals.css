@@ -248,6 +248,10 @@
   margin: 0;
   padding: 0;
   flex: 1;
+  /* Without min-height: 0, a flex child's `overflow-y: auto` doesn't actually clip —
+     the implicit min-content height pushes the parent beyond its bounds. With it,
+     the list scrolls internally and never expands the picker. */
+  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -308,11 +312,25 @@
 }
 
 .picker__footer {
+  /* Stick to the bottom of the scrolling modal body so the Add button is always
+     reachable, even after scrolling deep into a large ingredient list. */
+  position: sticky;
+  bottom: calc(-1 * var(--sp-md));
+  z-index: 5;
+
   display: flex;
   flex-direction: column;
   gap: var(--sp-xs);
-  padding: var(--sp-sm) 0 0;
+
+  /* Cancel modal-body's left/right + bottom padding so the footer spans full width
+     and sits flush against the safe-area edge. */
+  margin: 0 calc(-1 * var(--sp-md)) calc(-1 * (var(--sp-md) + var(--safe-bottom)));
+  padding: var(--sp-sm) var(--sp-md) calc(var(--sp-md) + var(--safe-bottom));
+
+  background: var(--color-bg);
   border-top: 0.5px solid var(--color-divider);
+  /* Subtle shadow above the footer so it visually separates from list content. */
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .picker__footer-name {

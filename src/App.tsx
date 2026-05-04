@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { NavLink, Route, Routes } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import "./App.css";
 
 import DashboardView from "./views/Dashboard/DashboardView";
@@ -27,11 +27,68 @@ const TABS: Tab[] = [
   { to: "/settings", label: "Settings", icon: "M19.4 13c0-.3.1-.6.1-1s0-.7-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 00-1.7-1l-.4-2.6h-4l-.3 2.6a7 7 0 00-1.7 1l-2.4-1-2 3.5L4.6 11l-.1 1 .1 1-2 1.5 2 3.5 2.4-1a7 7 0 001.7 1l.3 2.5h4l.4-2.6a7 7 0 001.7-1l2.4 1 2-3.5L19.4 13zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z" },
 ];
 
+/** Minimum horizontal travel (px) before a touch counts as a tab swipe. */
+const SWIPE_DISTANCE_PX = 80;
+/** Horizontal must dominate vertical by at least this ratio to count as a swipe. */
+const SWIPE_AXIS_RATIO = 1.5;
+/** Selectors where swipe should be ignored — text fields, modals, charts, horizontal scrollers. */
+const NO_SWIPE_SELECTOR =
+  'input, textarea, select, .modal-overlay, .filter-strip, .recharts-wrapper, [data-no-swipe="true"]';
+
 export default function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const swipeStateRef = useRef({ x: 0, y: 0, active: false, target: null as Element | null });
+
   useEffect(() => {
     startNotificationTicker();
     return () => stopNotificationTicker();
   }, []);
+
+  useEffect(() => {
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) {
+        swipeStateRef.current.active = false;
+        return;
+      }
+      const t = e.touches[0]!;
+      const target = e.target instanceof Element ? e.target : null;
+      // Bail early if the gesture started inside a no-swipe ancestor.
+      if (target && target.closest(NO_SWIPE_SELECTOR)) {
+        swipeStateRef.current.active = false;
+        return;
+      }
+      swipeStateRef.current = { x: t.clientX, y: t.clientY, active: true, target };
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      const state = swipeStateRef.current;
+      if (!state.active) return;
+      swipeStateRef.current.active = false;
+
+      if (e.changedTouches.length !== 1) return;
+      const t = e.changedTouches[0]!;
+      const dx = t.clientX - state.x;
+      const dy = t.clientY - state.y;
+
+      if (Math.abs(dx) < SWIPE_DISTANCE_PX) return;
+      if (Math.abs(dx) < Math.abs(dy) * SWIPE_AXIS_RATIO) return;
+
+      const idx = currentTabIndex(location.pathname);
+      if (idx < 0) return;
+      // Swipe-left (dx < 0) advances forward; swipe-right (dx > 0) goes back.
+      const next = idx + (dx < 0 ? 1 : -1);
+      if (next < 0 || next >= TABS.length) return;
+      navigate(TABS[next]!.to);
+    };
+
+    document.addEventListener("touchstart", onTouchStart, { passive: true });
+    document.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      document.removeEventListener("touchstart", onTouchStart);
+      document.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [location.pathname, navigate]);
 
   return (
     <div className="app-shell">
@@ -64,4 +121,11 @@ export default function App() {
       </nav>
     </div>
   );
+}
+
+function currentTabIndex(pathname: string): number {
+  return TABS.findIndex((t) => {
+    if (t.to === "/") return pathname === "/";
+    return pathname === t.to || pathname.startsWith(`${t.to}/`);
+  });
 }
