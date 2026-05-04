@@ -3,8 +3,18 @@
   grid-template-columns: auto 1fr auto;
 }
 
-.scroll-area--with-bottom {
-  padding-bottom: calc(var(--tab-bar-height) + var(--safe-bottom) + 64px);
+.plan-jump-row {
+  padding: 0 var(--sp-md) var(--sp-xs);
+  text-align: center;
+}
+
+.plan-jump-btn {
+  font-size: var(--fs-caption);
+  padding: 4px 12px;
+}
+
+.view-header--grocery {
+  grid-template-columns: auto 1fr auto auto;
 }
 
 /* Day cards */
@@ -117,30 +127,6 @@
   height: 0.5px;
   background: var(--color-divider);
   margin-left: calc(var(--sp-md) + 70px + var(--sp-md));
-}
-
-/* Bottom bar (sits above tab bar) */
-
-.bottom-bar {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(var(--tab-bar-height) + var(--safe-bottom));
-  width: 100%;
-  max-width: 600px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-md);
-  padding: var(--sp-sm) var(--sp-md);
-  background: var(--color-bg);
-  border-top: 0.5px solid var(--color-border);
-}
-
-.bottom-bar__cart {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-xs);
 }
 
 /* Slot picker — currently planned card */

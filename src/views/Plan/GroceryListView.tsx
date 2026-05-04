@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../../db";
 import { AISLE_LABEL, type Ingredient } from "../../models/Ingredient";
@@ -9,12 +8,14 @@ import type { MealPlanEntry } from "../../models/MealPlanEntry";
 import type { GroceryCheck } from "../../models/GroceryCheck";
 import { addDays, formatShort, startOfWeekMonday } from "../../services/dateUtils";
 import { aggregate, displayQuantity, grouped, type GroceryLine } from "../../services/groceryAggregator";
+import "./plan.css";
 
 export function GroceryListView() {
-  const location = useLocation();
-  const navState = location.state as { weekStart?: number } | null;
-  const weekStart = navState?.weekStart ?? startOfWeekMonday();
+  const [weekStart, setWeekStart] = useState<number>(() => startOfWeekMonday());
   const weekEnd = addDays(weekStart, 7);
+
+  const shiftWeek = (deltaDays: number) => setWeekStart(addDays(weekStart, deltaDays));
+  const isCurrentWeek = weekStart === startOfWeekMonday();
 
   const [hideEaten, setHideEaten] = useState(true);
 
@@ -115,13 +116,18 @@ export function GroceryListView() {
 
   return (
     <>
-      <header className="view-header">
-        <Link to="/plan" className="icon-btn" aria-label="Back to plan">
+      <header className="view-header view-header--grocery">
+        <button type="button" className="icon-btn" onClick={() => shiftWeek(-7)} aria-label="Previous week">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 18l-6-6 6-6" />
           </svg>
-        </Link>
-        <h1 style={{ fontSize: "var(--fs-title)" }}>{weekLabel}</h1>
+        </button>
+        <h1 style={{ fontSize: "var(--fs-title)", fontWeight: 500 }}>{weekLabel}</h1>
+        <button type="button" className="icon-btn" onClick={() => shiftWeek(7)} aria-label="Next week">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </button>
         <button
           type="button"
           className={`icon-btn ${hideEaten ? "icon-btn--accent" : ""}`}
@@ -134,6 +140,18 @@ export function GroceryListView() {
           </svg>
         </button>
       </header>
+
+      {!isCurrentWeek ? (
+        <div className="plan-jump-row">
+          <button
+            type="button"
+            className="btn btn--ghost plan-jump-btn"
+            onClick={() => setWeekStart(startOfWeekMonday())}
+          >
+            Jump to today
+          </button>
+        </div>
+      ) : null}
 
       <div className="scroll-area">
         {totalCount === 0 ? (

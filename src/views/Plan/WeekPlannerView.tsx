@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../../db";
 import { MEAL_SLOTS, MEAL_SLOT_LABEL, type Meal, type MealSlot } from "../../models/Meal";
@@ -68,7 +67,15 @@ export function WeekPlannerView() {
         </button>
       </header>
 
-      <div className="scroll-area scroll-area--with-bottom">
+      {!isCurrentWeek ? (
+        <div className="plan-jump-row">
+          <button type="button" className="btn btn--ghost plan-jump-btn" onClick={goToday}>
+            Jump to today
+          </button>
+        </div>
+      ) : null}
+
+      <div className="scroll-area">
         {days.map((day) => {
           const dayEntries = entriesByDay.get(day) ?? [];
           const isToday = isSameDay(day, today);
@@ -102,20 +109,6 @@ export function WeekPlannerView() {
             </section>
           );
         })}
-      </div>
-
-      <div className="bottom-bar">
-        <button
-          type="button"
-          className="btn btn--ghost"
-          onClick={goToday}
-          disabled={isCurrentWeek}
-        >
-          Today
-        </button>
-        <Link to="/plan/grocery" state={{ weekStart }} className="btn btn--primary bottom-bar__cart">
-          <CartIcon /> Grocery
-        </Link>
       </div>
 
       {picker ? (
@@ -192,12 +185,3 @@ function Chevron({ dir }: { dir: "left" | "right" }) {
   );
 }
 
-function CartIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="21" r="1" />
-      <circle cx="20" cy="21" r="1" />
-      <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" />
-    </svg>
-  );
-}
