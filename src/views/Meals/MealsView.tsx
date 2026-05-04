@@ -138,16 +138,16 @@ export default function MealsView() {
 }
 
 function MealCard({ meal }: { meal: Meal }) {
-  const ingredients = useLiveQuery<MealIngredient[]>(
+  const ingredients = useLiveQuery(
     async () => {
-      if (meal.id === undefined) return [];
+      if (meal.id === undefined) return [] as MealIngredient[];
       return await db.mealIngredients.where("mealId").equals(meal.id).toArray();
     },
     [meal.id],
     [] as MealIngredient[],
   );
 
-  const ingredientLookup = useLiveQuery<Map<number, NutrientTotals>>(
+  const ingredientLookup = useLiveQuery(
     async () => {
       if (ingredients.length === 0) return new Map<number, NutrientTotals>();
       const ids = ingredients.map((i) => i.ingredientId);
