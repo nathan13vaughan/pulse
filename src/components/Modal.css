@@ -19,14 +19,13 @@
 }
 
 /*
- * Close animation: rather than a second @keyframes, set the closing transform
- * directly and let the .modal-sheet base transition animate to it. This is
- * dramatically more reliable than swapping `animation` declarations on the
- * same element — Safari sometimes refuses to restart an animation when the
- * property name changes, leaving the modal frozen.
+ * Close: dedicated keyframe animation. The base .modal-sheet has its own open
+ * `animation` declaration which can interfere with a transition-only close
+ * (the open animation's final state lingers on some browsers). Using a named
+ * close animation with `forwards` guarantees the slide-down actually plays.
  */
 .modal-sheet--closing {
-  transform: translateY(100%);
+  animation: modal-slide-down 280ms cubic-bezier(0.4, 0, 0.6, 1) forwards;
 }
 
 .modal-sheet {
@@ -163,8 +162,11 @@
   to   { transform: translateY(0); }
 }
 
-/* Close animations now use property transitions (see .modal-overlay and .modal-sheet
-   above) rather than keyframes — more reliable on Safari. */
+@keyframes modal-slide-down {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}
+
 
 @media (min-width: 600px) {
   .modal-overlay {
