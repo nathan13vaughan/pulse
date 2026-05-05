@@ -7,9 +7,12 @@
 
 function pulse(pattern: number | number[]): void {
   if (typeof navigator === "undefined") return;
-  const vib = (navigator as Navigator & { vibrate?: (p: number | number[]) => boolean }).vibrate;
-  if (typeof vib === "function") {
-    try { vib.call(navigator, pattern); } catch { /* no-op */ }
+  // Optional-chain the call: if `vibrate` isn't supported, this is a no-op.
+  // Any thrown error from a flaky implementation is swallowed.
+  try {
+    navigator.vibrate?.(pattern);
+  } catch {
+    /* no-op */
   }
 }
 
