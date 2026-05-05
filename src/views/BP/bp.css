@@ -116,22 +116,55 @@
   margin: 0;
   padding: 0;
   background: var(--color-surface);
-  border: 0.5px solid var(--color-border);
   border-radius: var(--r-md);
   overflow: hidden;
+  box-shadow: var(--shadow-sm), inset 0 0 0 0.5px var(--color-border);
 }
 
-.reading-row {
+/* iOS-style swipe-to-reveal row.
+ * The action button sits absolutely-positioned behind the content; the content
+ * slides left to reveal it. */
+.reading-row-wrap {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 0.5px solid var(--color-divider);
+  background: var(--color-warning); /* shows through during over-pull bounce */
+}
+.reading-row-wrap:last-child {
+  border-bottom: none;
+}
+
+.reading-row-action {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 88px;
+  background: var(--color-warning);
+  color: #fff;
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  text-align: center;
+  z-index: 1;
+}
+
+.reading-row-content {
+  position: relative;
+  z-index: 2;
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: var(--sp-sm);
   padding: var(--sp-sm) var(--sp-md);
-  border-bottom: 0.5px solid var(--color-divider);
+  background: var(--color-surface);
+  transform: translateX(0);
+  transition: transform 240ms var(--ease-snap);
+  /* Disable native horizontal scroll on this element so our swipe handler runs cleanly. */
+  touch-action: pan-y;
 }
 
-.reading-row:last-child {
-  border-bottom: none;
+.reading-row-content--dragging {
+  transition: none;
 }
 
 .reading-row__main {
@@ -155,9 +188,8 @@
   margin-top: 2px;
 }
 
-.reading-row__delete {
-  margin-left: var(--sp-xs);
-}
+/* `.reading-row__delete` removed — delete is now revealed by swiping left
+   on the row, see `.reading-row-action`. */
 
 /* Form layout used by the log modal */
 

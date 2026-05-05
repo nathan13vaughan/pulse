@@ -43,30 +43,62 @@
   margin: 0;
 }
 
+/* iOS grouped-list aesthetic: rounded card, hairline dividers between rows,
+   no outer border (the shadow does the work). */
 .settings-list {
   list-style: none;
   margin: 0;
   padding: 0;
   background: var(--color-surface);
-  border: 0.5px solid var(--color-border);
   border-radius: var(--r-md);
   overflow: hidden;
+  box-shadow: var(--shadow-sm), inset 0 0 0 0.5px var(--color-border);
 }
 
 .settings-row {
   display: flex;
   align-items: center;
   padding: var(--sp-sm) var(--sp-md);
-  border-bottom: 0.5px solid var(--color-divider);
   gap: var(--sp-sm);
+  /* iOS-style indented divider — starts inside the card body, not edge-to-edge. */
+  position: relative;
 }
-.settings-row:last-child { border-bottom: none; }
+.settings-row:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: var(--sp-md);
+  right: 0;
+  bottom: 0;
+  height: 0.5px;
+  background: var(--color-divider);
+}
 
 .settings-row__main {
   flex: 1;
   text-align: left;
   background: none;
   padding: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+}
+
+.settings-row__main::after {
+  /* Chevron indicator for tappable rows — matches iOS detail-disclosure style. */
+  content: "";
+  margin-left: auto;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--color-text-muted);
+  border-bottom: 1.5px solid var(--color-text-muted);
+  transform: rotate(-45deg);
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+/* iOS rows usually have either a chevron OR a toggle, not both. */
+.settings-row:has(.toggle-row) .settings-row__main::after {
+  display: none;
 }
 
 .settings-row__time {

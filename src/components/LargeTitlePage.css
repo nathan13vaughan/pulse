@@ -1,0 +1,73 @@
+/* iOS-style sticky nav bar that pairs with a large hero title in the scroll area. */
+
+.nav-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: minmax(36px, auto) 1fr minmax(36px, auto);
+  align-items: center;
+  gap: var(--sp-xs);
+  padding: var(--sp-xs) var(--sp-md);
+  min-height: 44px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 0.5px solid transparent;
+  transition: border-bottom-color var(--t-base);
+}
+
+.nav-bar--scrolled {
+  border-bottom-color: var(--color-border);
+}
+
+.nav-bar__leading,
+.nav-bar__trailing {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  min-height: 32px;
+}
+
+.nav-bar__trailing {
+  justify-content: flex-end;
+}
+
+.nav-bar__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+  /* Hidden until the hero title scrolls out of view, then fade in. */
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity var(--t-base), transform var(--t-base);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-bar__title--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.large-title {
+  margin: 0;
+  /* No horizontal padding — the surrounding scroll-area already pads
+     content. Just provide a comfortable top/bottom rhythm under the nav bar. */
+  padding: var(--sp-xs) 0 var(--sp-md);
+  font-size: 2.125rem; /* 34pt — iOS large title spec */
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  color: var(--color-text-primary);
+  line-height: 1.1;
+}
+
+.large-title-page__scroll {
+  /* Nav bar above provides the breathing room — kill the default scroll-area
+     top padding so the hero title sits flush with the nav bar's bottom edge. */
+  padding-top: 0;
+}

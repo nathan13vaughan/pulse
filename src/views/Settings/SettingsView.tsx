@@ -19,22 +19,19 @@ import { ReminderEditor } from "./ReminderEditor";
 import { GoalsSection } from "./GoalsSection";
 import { AIFeedbackSection } from "./AIFeedbackSection";
 import { useDeferredUnmount } from "../../services/useDeferredUnmount";
+import { useAlert } from "../../components/AlertProvider";
+import { LargeTitlePage } from "../../components/LargeTitlePage";
 import "./settings.css";
 
 export default function SettingsView() {
   return (
-    <>
-      <header className="view-header">
-        <h1>Settings</h1>
-      </header>
-      <div className="scroll-area">
-        <GoalsSection />
-        <RemindersSection />
-        <AIFeedbackSection />
-        <DataSection />
-        <InstallSection />
-      </div>
-    </>
+    <LargeTitlePage title="Settings">
+      <GoalsSection />
+      <RemindersSection />
+      <AIFeedbackSection />
+      <DataSection />
+      <InstallSection />
+    </LargeTitlePage>
   );
 }
 
@@ -201,6 +198,7 @@ function ScheduleRow({
 function DataSection() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const confirm = useAlert();
 
   const onExport = async () => {
     try {
@@ -219,9 +217,12 @@ function DataSection() {
     if (!file) return;
     try {
       const data = await readImportFile(file);
-      const ok = window.confirm(
-        `Import ${data.readings.length} readings, ${data.meals.length} meals, ${data.mealPlan.length} plan entries? This will REPLACE all existing data.`,
-      );
+      const ok = await confirm({
+        title: "Replace all data?",
+        message: `Import ${data.readings.length} readings, ${data.meals.length} meals, ${data.mealPlan.length} plan entries. Your current data will be erased.`,
+        confirmLabel: "Replace",
+        destructive: true,
+      });
       if (!ok) return;
       await replaceFromExport(data);
       setStatus("Import complete.");

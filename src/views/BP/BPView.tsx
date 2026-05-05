@@ -3,6 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../../db";
 import { categoryFor } from "../../models/BPReading";
 import { CategoryBadge } from "../../components/CategoryBadge";
+import { LargeTitlePage } from "../../components/LargeTitlePage";
 import { formatDateTime } from "../../services/dateUtils";
 import { BPLogModal } from "./BPLogModal";
 import { BPReadingList } from "./BPReadingList";
@@ -20,9 +21,9 @@ export default function BPView() {
   const latest = readings?.[0];
 
   return (
-    <>
-      <header className="view-header">
-        <h1>Pressure</h1>
+    <LargeTitlePage
+      title="Pressure"
+      trailing={
         <button
           type="button"
           className="icon-btn icon-btn--accent"
@@ -33,35 +34,33 @@ export default function BPView() {
             <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
         </button>
-      </header>
+      }
+    >
+      {latest ? (
+        <section className="card hero">
+          <div className="section-label">Latest reading</div>
+          <div className="hero__numbers">
+            <span className="hero__sys mono">{latest.systolic}</span>
+            <span className="hero__slash">/</span>
+            <span className="hero__dia mono">{latest.diastolic}</span>
+            <span className="hero__unit">mmHg</span>
+          </div>
+          <div className="hero__meta">
+            <CategoryBadge category={categoryFor(latest.systolic, latest.diastolic)} />
+            <span className="muted"> · {formatDateTime(latest.timestamp)}</span>
+          </div>
+        </section>
+      ) : (
+        <section className="card">
+          <h2 className="headline" style={{ marginTop: 0 }}>No readings yet</h2>
+          <p className="muted" style={{ margin: 0 }}>Tap + to log your first measurement.</p>
+        </section>
+      )}
 
-      <div className="scroll-area">
-        {latest ? (
-          <section className="card hero">
-            <div className="section-label">Latest reading</div>
-            <div className="hero__numbers">
-              <span className="hero__sys mono">{latest.systolic}</span>
-              <span className="hero__slash">/</span>
-              <span className="hero__dia mono">{latest.diastolic}</span>
-              <span className="hero__unit">mmHg</span>
-            </div>
-            <div className="hero__meta">
-              <CategoryBadge category={categoryFor(latest.systolic, latest.diastolic)} />
-              <span className="muted"> · {formatDateTime(latest.timestamp)}</span>
-            </div>
-          </section>
-        ) : (
-          <section className="card">
-            <h2 className="headline" style={{ marginTop: 0 }}>No readings yet</h2>
-            <p className="muted" style={{ margin: 0 }}>Tap + to log your first measurement.</p>
-          </section>
-        )}
-
-        <BPTrendChart readings={readings ?? []} />
-        <BPReadingList readings={readings ?? []} />
-      </div>
+      <BPTrendChart readings={readings ?? []} />
+      <BPReadingList readings={readings ?? []} />
 
       <BPLogModal open={logOpen} onClose={() => setLogOpen(false)} />
-    </>
+    </LargeTitlePage>
   );
 }

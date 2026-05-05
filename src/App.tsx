@@ -11,6 +11,7 @@ import SettingsView from "./views/Settings/SettingsView";
 import InsightsView from "./views/Insights/InsightsView";
 import TipsView from "./views/Tips/TipsView";
 import { startNotificationTicker, stopNotificationTicker } from "./services/notifications";
+import { haptic } from "./services/haptics";
 
 interface Tab {
   to: string;
@@ -79,6 +80,7 @@ export default function App() {
       // Swipe-left (dx < 0) advances forward; swipe-right (dx > 0) goes back.
       const next = idx + (dx < 0 ? 1 : -1);
       if (next < 0 || next >= TABS.length) return;
+      haptic.switch();
       navigate(TABS[next]!.to);
     };
 

@@ -65,7 +65,7 @@
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: var(--sp-xs);
-  padding: var(--sp-sm) var(--sp-md);
+  padding: calc(var(--sp-sm) + 8px) var(--sp-md) var(--sp-sm);
   /* Glass-blur header — sticks at the top of the sheet with a soft blur over
      the body content, matching the iOS sheet aesthetic. */
   background: var(--surface-glass);
@@ -74,6 +74,35 @@
   border-bottom: 0.5px solid var(--color-border);
   position: relative;
   z-index: 1;
+  /* Larger touch target for drag-to-dismiss; the header is the drag area. */
+  touch-action: none;
+  cursor: grab;
+}
+
+/* iOS sheet drag handle — small horizontal pill at top centre of the header.
+   Both visual signal ("you can pull this") and drag target. */
+.modal-handle {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .modal-handle {
+    background: rgba(255, 255, 255, 0.22);
+  }
+}
+
+.modal-sheet--dragging {
+  /* Disable the spring transition while the finger is actively dragging so
+     the sheet tracks the touch in real time. */
+  transition: none !important;
 }
 
 .modal-title {

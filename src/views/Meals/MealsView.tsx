@@ -12,6 +12,7 @@ import {
 import { gramsEquivalent, type MealIngredient } from "../../models/MealIngredient";
 import { nutrientsPer100g } from "../../models/Ingredient";
 import { MealEditor } from "./MealEditor";
+import { LargeTitlePage } from "../../components/LargeTitlePage";
 import { useDeferredUnmount } from "../../services/useDeferredUnmount";
 import "./meals.css";
 
@@ -55,9 +56,9 @@ export default function MealsView() {
   };
 
   return (
-    <>
-      <header className="view-header">
-        <h1>Meals</h1>
+    <LargeTitlePage
+      title="Meals"
+      trailing={
         <button
           type="button"
           className="icon-btn icon-btn--accent"
@@ -68,9 +69,8 @@ export default function MealsView() {
             <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
         </button>
-      </header>
-
-      <div className="scroll-area">
+      }
+    >
         <input
           className="text-input"
           placeholder="Search meals or tags"
@@ -125,7 +125,6 @@ export default function MealsView() {
             ))}
           </ul>
         )}
-      </div>
 
       {editingDeferred ? (
         <MealEditor
@@ -135,7 +134,7 @@ export default function MealsView() {
           onClose={() => setEditing(null)}
         />
       ) : null}
-    </>
+    </LargeTitlePage>
   );
 }
 

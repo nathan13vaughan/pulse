@@ -5,6 +5,7 @@ import { db } from "../../db";
 import { categoryFor, type BPReading } from "../../models/BPReading";
 import { defaultGoals, type Goals } from "../../models/Goals";
 import { CategoryBadge } from "../../components/CategoryBadge";
+import { LargeTitlePage } from "../../components/LargeTitlePage";
 import { BPLogModal } from "../BP/BPLogModal";
 import {
   formatDateTime,
@@ -77,13 +78,8 @@ export default function DashboardView() {
   const [logOpen, setLogOpen] = useState(false);
 
   return (
-    <>
-      <header className="view-header">
-        <h1>Today</h1>
-      </header>
-
-      <div className="scroll-area">
-        <div className="dash-stack">
+    <LargeTitlePage title="Today">
+      <div className="dash-stack">
           <div>
             <div className="dash-greeting">{greeting()}</div>
             <div className="muted dash-date">{formatLong(todayStart)}</div>
@@ -162,10 +158,9 @@ export default function DashboardView() {
             <ChevronRight />
           </Link>
         </div>
-      </div>
 
       <BPLogModal open={logOpen} onClose={() => setLogOpen(false)} />
-    </>
+    </LargeTitlePage>
   );
 }
 
