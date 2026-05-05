@@ -54,16 +54,34 @@
   transform: translateY(0);
 }
 
+/* Row that sits at the top of the scroll content: hero title on the left,
+   optional trailing action (+ button etc) on the right — iOS Calendar
+   / Reminders pattern. Keeps the nav bar from looking lonely at rest. */
+.large-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-md);
+  padding: var(--sp-xs) 0 var(--sp-md);
+}
+
 .large-title {
   margin: 0;
-  /* No horizontal padding — the surrounding scroll-area already pads
-     content. Just provide a comfortable top/bottom rhythm under the nav bar. */
-  padding: var(--sp-xs) 0 var(--sp-md);
+  padding: 0;
   font-size: 2.125rem; /* 34pt — iOS large title spec */
   font-weight: 700;
   letter-spacing: -0.022em;
   color: var(--color-text-primary);
   line-height: 1.1;
+  flex: 1;
+  min-width: 0;
+}
+
+.large-title-row__trailing {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
 }
 
 .large-title-page__scroll {

@@ -3,23 +3,24 @@ import "./LargeTitlePage.css";
 
 interface LargeTitlePageProps {
   title: string;
-  /** Right-side content for the nav bar (e.g. + button). Always visible. */
+  /** Trailing action (e.g. + button). Renders next to the big title at rest. */
   trailing?: ReactNode;
-  /** Left-side content for the nav bar (e.g. back chevron). Always visible. */
+  /** Optional leading content for the nav bar (e.g. back chevron). */
   leading?: ReactNode;
   children: ReactNode;
 }
 
 /**
- * iOS large-title page wrapper. Pattern:
- *   - A sticky-top, glass-blur nav bar that initially shows only the
- *     trailing/leading actions; the small title fades in as you scroll past
- *     the big title below.
- *   - The big "hero" title lives at the top of the scroll content and scrolls
- *     away naturally with the rest of the page.
+ * iOS large-title page wrapper.
+ *   - Sticky glass nav bar that stays mostly empty while you're at the top of
+ *     the page; a small title fades in as you scroll past the hero title.
+ *   - The big "hero" title sits at the top of the scroll content. If a
+ *     trailing action is provided, it sits next to the title (iOS Calendar /
+ *     Reminders pattern) — which keeps the nav bar from looking lonely.
  *
- * Hand-off between the two titles is driven by IntersectionObserver — when the
- * hero title rolls out of view, the nav-bar title appears. Smooth, GPU-cheap.
+ * The hand-off between the hero title and the nav-bar title is driven by
+ * IntersectionObserver — when the hero title rolls out of view, the nav-bar
+ * title appears.
  */
 export function LargeTitlePage({ title, trailing, leading, children }: LargeTitlePageProps) {
   const [titleVisible, setTitleVisible] = useState(true);
@@ -43,10 +44,13 @@ export function LargeTitlePage({ title, trailing, leading, children }: LargeTitl
       <header className={`nav-bar ${navBarHidden ? "" : "nav-bar--scrolled"}`}>
         <div className="nav-bar__leading">{leading}</div>
         <h2 className={`nav-bar__title ${navBarHidden ? "" : "nav-bar__title--visible"}`}>{title}</h2>
-        <div className="nav-bar__trailing">{trailing}</div>
+        <div className="nav-bar__trailing" aria-hidden />
       </header>
       <div className="scroll-area large-title-page__scroll">
-        <h1 ref={heroRef} className="large-title">{title}</h1>
+        <div className="large-title-row">
+          <h1 ref={heroRef} className="large-title">{title}</h1>
+          {trailing ? <div className="large-title-row__trailing">{trailing}</div> : null}
+        </div>
         {children}
       </div>
     </>
