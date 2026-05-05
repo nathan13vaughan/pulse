@@ -1,5 +1,14 @@
 /* iOS-style sticky nav bar that pairs with a large hero title in the scroll area. */
 
+/*
+ * The nav bar is mostly invisible at rest — it only reserves enough vertical
+ * space for the iOS status-bar safe-area inset. When the hero title scrolls
+ * out of view, the bar expands and the small title fades in, giving you a
+ * pinned title strip that stays accessible.
+ *
+ * This avoids the "empty 44px stripe" problem at the top of pages that use
+ * this layout (Today / Pressure / Meals / Settings).
+ */
 .nav-bar {
   position: sticky;
   top: 0;
@@ -8,16 +17,22 @@
   grid-template-columns: minmax(36px, auto) 1fr minmax(36px, auto);
   align-items: center;
   gap: var(--sp-xs);
-  padding: var(--sp-xs) var(--sp-md);
-  min-height: 44px;
-  background: var(--surface-glass);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  padding-left: var(--sp-md);
+  padding-right: var(--sp-md);
+  padding-top: max(0px, env(safe-area-inset-top, 0px));
+  padding-bottom: 0;
+  background: transparent;
   border-bottom: 0.5px solid transparent;
-  transition: border-bottom-color var(--t-base);
+  transition: background var(--t-base), backdrop-filter var(--t-base),
+              border-bottom-color var(--t-base), padding var(--t-base);
 }
 
 .nav-bar--scrolled {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 6px);
+  padding-bottom: 6px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
   border-bottom-color: var(--color-border);
 }
 
@@ -26,32 +41,37 @@
   display: flex;
   align-items: center;
   gap: var(--sp-xs);
-  min-height: 32px;
 }
 
 .nav-bar__trailing {
   justify-content: flex-end;
 }
 
+/*
+ * The small nav-bar title collapses to zero height at rest so the bar shrinks
+ * to just safe-area padding. When the hero scrolls away, max-height + opacity
+ * animate it into view, expanding the bar by ~32px in the process.
+ */
 .nav-bar__title {
   margin: 0;
   font-size: var(--fs-title);
   font-weight: 600;
   color: var(--color-text-primary);
   text-align: center;
-  /* Hidden until the hero title scrolls out of view, then fade in. */
   opacity: 0;
   transform: translateY(4px);
-  transition: opacity var(--t-base), transform var(--t-base);
+  max-height: 0;
+  overflow: hidden;
   pointer-events: none;
   white-space: nowrap;
-  overflow: hidden;
   text-overflow: ellipsis;
+  transition: opacity var(--t-base), transform var(--t-base), max-height var(--t-base);
 }
 
 .nav-bar__title--visible {
   opacity: 1;
   transform: translateY(0);
+  max-height: 32px;
 }
 
 /* Row that sits at the top of the scroll content: hero title on the left,
