@@ -2,6 +2,7 @@ import { db } from "../db";
 import type { GroceryAisle, Ingredient } from "../models/Ingredient";
 import ausnutData from "../data/ausnut_foods.json";
 import brandedData from "../data/branded_foods.json";
+import { inferAisleFromName } from "./aisleInference";
 
 interface ImportRow {
   key?: string;
@@ -35,6 +36,18 @@ const AISLE_VALUES: ReadonlyArray<GroceryAisle> = [
 const BUNDLE_VERSION = 2;
 
 const STORAGE_KEY = "pulse:lastImportedBundleVersion";
+
+/**
+ * Bumped when we want every device to re-run the name-based aisle
+ * re-categorisation pass. Independent of bundle version.
+ */
+const RECATEGORISATION_VERSION = 1;
+const RECAT_STORAGE_KEY = "pulse:lastRecategorisationVersion";
+
+/** Aisles where the old buggy substring matcher dumped misclassified items.
+    These are the only aisles the retroactive pass will re-write — anything
+    already in produce/dairyEggs/etc is treated as user-trusted. */
+const SUSPECT_AISLES: ReadonlyArray<GroceryAisle> = ["beverages", "frozen", "other"];
 
 function parseAisle(raw?: string): GroceryAisle {
   if (raw && (AISLE_VALUES as readonly string[]).includes(raw)) return raw as GroceryAisle;
@@ -115,4 +128,40 @@ export async function importIfNeeded(): Promise<void> {
     console.log(`Imported ${missing.length} new ingredients from bundle v${BUNDLE_VERSION}.`);
   }
   setLastBundleVersion(BUNDLE_VERSION);
+}
+
+/**
+ * One-time pass over existing ingredients to fix aisle miscategorisation done
+ * by an older substring-based matcher (e.g. "tuna in springwater" landing in
+ * beverages because of "water").
+ *
+ * Conservative — only re-aisles items currently sitting in known dumping-ground
+ * aisles, and only when the inferred replacement is itself a *different*,
+ * non-dumping-ground aisle. User-edited or correctly-categorised items aren't
+ * touched.
+ */
+export async function recategoriseSuspectAisles(): Promise<void> {
+  const lastVersion = parseInt(localStorage.getItem(RECAT_STORAGE_KEY) ?? "0", 10);
+  if (Number.isFinite(lastVersion) && lastVersion >= RECATEGORISATION_VERSION) return;
+
+  const suspects = await db.ingredients
+    .where("aisle")
+    .anyOf(SUSPECT_AISLES as unknown as string[])
+    .toArray();
+
+  let updated = 0;
+  for (const ing of suspects) {
+    if (ing.id === undefined) continue;
+    const inferred = inferAisleFromName(ing.name, ing.brand);
+    if (!inferred) continue;
+    if (inferred === ing.aisle) continue;
+    if (SUSPECT_AISLES.includes(inferred)) continue; // never demote into another dumping ground
+    await db.ingredients.update(ing.id, { aisle: inferred });
+    updated += 1;
+  }
+
+  localStorage.setItem(RECAT_STORAGE_KEY, String(RECATEGORISATION_VERSION));
+  if (updated > 0) {
+    console.log(`Re-categorised ${updated} ingredients from suspect aisles using their names.`);
+  }
 }
