@@ -48,6 +48,16 @@
   --r-sm: 8px;
   --r-md: 14px;
   --r-lg: 20px;
+  --r-xl: 28px;
+
+  /* Elevation — layered shadows give depth without heaviness.
+     Two-pass shadow: tight ambient + diffuse spread. */
+  --shadow-sm: 0 1px 2px rgba(20, 18, 14, 0.04), 0 2px 6px rgba(20, 18, 14, 0.04);
+  --shadow-md: 0 1px 2px rgba(20, 18, 14, 0.05), 0 6px 20px rgba(20, 18, 14, 0.06);
+  --shadow-lg: 0 2px 6px rgba(20, 18, 14, 0.06), 0 18px 40px rgba(20, 18, 14, 0.10);
+
+  /* Translucent surface for glass-blur elements (tab bar, modal header). */
+  --surface-glass: rgba(252, 251, 248, 0.72);
 
   /* Transitions */
   --t-fast: 120ms ease-out;
@@ -88,6 +98,13 @@
 
     --chart-grid: rgba(255, 255, 255, 0.08);
     --chart-tooltip-bg: #25221e;
+
+    /* Darker, blacker shadows so depth still reads against a dim background. */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.30), 0 2px 6px rgba(0, 0, 0, 0.20);
+    --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 22px rgba(0, 0, 0, 0.30);
+    --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.40), 0 22px 44px rgba(0, 0, 0, 0.45);
+
+    --surface-glass: rgba(37, 34, 30, 0.65);
   }
 }
 
@@ -231,9 +248,11 @@ button:active:not(:disabled),
 
 .card {
   background: var(--color-surface);
-  border: 0.5px solid var(--color-border);
   border-radius: var(--r-md);
   padding: var(--sp-md);
+  /* Hairline + soft shadow combo: the border keeps the card defined on
+     low-contrast backgrounds, the shadow gives the floating depth. */
+  box-shadow: var(--shadow-sm), inset 0 0 0 0.5px var(--color-border);
 }
 
 .section-label {

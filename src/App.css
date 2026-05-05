@@ -15,13 +15,28 @@
   min-height: 0;
 }
 
+/*
+ * Glass-morph tab bar: position-fixed, partially transparent, with a
+ * backdrop-filter blur. Content scrolls under it (the .scroll-area's
+ * padding-bottom keeps content from being permanently hidden) and you
+ * see it softly fade through, native-iOS style.
+ */
 .tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  z-index: 50;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 0;
   height: calc(var(--tab-bar-height) + var(--safe-bottom));
   padding-bottom: var(--safe-bottom);
-  background: var(--color-surface);
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
   border-top: 0.5px solid var(--color-border);
 }
 
@@ -59,14 +74,16 @@
 }
 
 .view-header {
-  padding: var(--sp-md) var(--sp-md) var(--sp-xs);
+  padding: var(--sp-lg) var(--sp-md) var(--sp-xs);
   display: flex;
   align-items: baseline;
   justify-content: space-between;
 }
 
 .view-header h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   margin: 0;
+  color: var(--color-text-primary);
 }

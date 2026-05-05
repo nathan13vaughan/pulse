@@ -35,9 +35,10 @@
   background: var(--color-bg);
   margin-top: auto;
   max-height: 92dvh;
-  border-top-left-radius: var(--r-lg);
-  border-top-right-radius: var(--r-lg);
+  border-top-left-radius: var(--r-xl);
+  border-top-right-radius: var(--r-xl);
   overflow: hidden;
+  box-shadow: var(--shadow-lg);
   transform: translateY(0) scale(1);
   /* Spring-up only fires once on mount; the close uses the transition below. */
   animation: spring-up 420ms cubic-bezier(0.34, 1.4, 0.5, 1);
@@ -65,8 +66,14 @@
   align-items: center;
   gap: var(--sp-xs);
   padding: var(--sp-sm) var(--sp-md);
-  background: var(--color-surface);
+  /* Glass-blur header — sticks at the top of the sheet with a soft blur over
+     the body content, matching the iOS sheet aesthetic. */
+  background: var(--surface-glass);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
   border-bottom: 0.5px solid var(--color-border);
+  position: relative;
+  z-index: 1;
 }
 
 .modal-title {
