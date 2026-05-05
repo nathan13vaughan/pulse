@@ -58,8 +58,20 @@
   margin-top: 0;
 }
 
+/*
+ * Tall modals reach the very top of the viewport, so the modal-header sits
+ * under the iOS status bar / notch. Reserve safe-area space PLUS a buffer
+ * for the drag handle PLUS regular header padding, so the title has room
+ * to breathe below the system UI and the handle.
+ */
 .modal-sheet--tall .modal-header {
-  padding-top: max(var(--sp-sm), env(safe-area-inset-top));
+  padding-top: calc(env(safe-area-inset-top, 0px) + var(--sp-sm) + 12px);
+}
+
+/* Drag handle moves below the notch on tall modals so it's visible
+   instead of hiding behind the iOS status bar / Dynamic Island. */
+.modal-sheet--tall .modal-handle {
+  top: calc(env(safe-area-inset-top, 0px) + 6px);
 }
 
 .modal-header {
