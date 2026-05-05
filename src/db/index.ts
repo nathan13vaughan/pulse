@@ -8,6 +8,7 @@ import type { NotificationSchedule } from "../models/NotificationSchedule";
 import type { GroceryCheck } from "../models/GroceryCheck";
 import type { Goals } from "../models/Goals";
 import { defaultGoals } from "../models/Goals";
+import type { AISettings } from "../models/AISettings";
 
 class PulseDB extends Dexie {
   readings!: Table<BPReading, number>;
@@ -18,6 +19,7 @@ class PulseDB extends Dexie {
   notificationSchedules!: Table<NotificationSchedule, number>;
   groceryChecks!: Table<GroceryCheck, [number, number]>;
   goals!: Table<Goals, number>;
+  aiSettings!: Table<AISettings, number>;
 
   constructor() {
     super("pulse");
@@ -39,6 +41,11 @@ class PulseDB extends Dexie {
     // v3 — goals singleton (id always 1).
     this.version(3).stores({
       goals: "id",
+    });
+
+    // v4 — AI settings singleton (Groq key + cached response).
+    this.version(4).stores({
+      aiSettings: "id",
     });
   }
 }
@@ -62,4 +69,15 @@ export async function getGoals(): Promise<Goals> {
 /** Persist the singleton goals row (always id=1). */
 export async function saveGoals(goals: Omit<Goals, "id">): Promise<void> {
   await db.goals.put({ ...goals, id: 1 });
+}
+
+/** Read the singleton AI settings row, or empty defaults. */
+export async function getAISettings(): Promise<AISettings> {
+  return (await db.aiSettings.get(1)) ?? { id: 1 };
+}
+
+/** Patch a subset of AI settings, preserving the rest. */
+export async function updateAISettings(patch: Partial<Omit<AISettings, "id">>): Promise<void> {
+  const current = await getAISettings();
+  await db.aiSettings.put({ ...current, ...patch, id: 1 });
 }

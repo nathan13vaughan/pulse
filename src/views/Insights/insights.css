@@ -44,6 +44,23 @@
   margin: var(--sp-md) 0 0;
 }
 
+.ai-feedback__text {
+  margin: var(--sp-xs) 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: 1.55;
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ai-feedback__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  margin-top: var(--sp-xs);
+}
+
 .view-header {
   display: grid;
   grid-template-columns: auto 1fr auto;

@@ -7,16 +7,19 @@ import type { MealPlanEntry } from "../models/MealPlanEntry";
 import type { NotificationSchedule } from "../models/NotificationSchedule";
 import type { GroceryCheck } from "../models/GroceryCheck";
 import type { Goals } from "../models/Goals";
+import type { AISettings } from "../models/AISettings";
 
 /**
  * Versioned wire format for backups.
  *  - v1: original tables
  *  - v2: + groceryChecks
  *  - v3: + goals (singleton)
+ *  - v4: + AI cached response (the API key itself is intentionally excluded
+ *        from exports so a shared backup can't leak credentials)
  *
  * Older backups still import; missing fields are treated as empty.
  */
-export const EXPORT_VERSION = 3;
+export const EXPORT_VERSION = 4;
 
 export interface PulseExport {
   version: number;
@@ -29,10 +32,12 @@ export interface PulseExport {
   notificationSchedules: NotificationSchedule[];
   groceryChecks?: GroceryCheck[]; // v2+
   goals?: Goals[];                // v3+ (always 0 or 1 row)
+  /** v4+. API key is stripped before export so it can't leak via shared files. */
+  aiSettings?: AISettings[];
 }
 
 export async function gatherExport(): Promise<PulseExport> {
-  const [readings, ingredients, meals, mealIngredients, mealPlan, notificationSchedules, groceryChecks, goals] =
+  const [readings, ingredients, meals, mealIngredients, mealPlan, notificationSchedules, groceryChecks, goals, aiSettings] =
     await Promise.all([
       db.readings.toArray(),
       db.ingredients.toArray(),
@@ -42,7 +47,12 @@ export async function gatherExport(): Promise<PulseExport> {
       db.notificationSchedules.toArray(),
       db.groceryChecks.toArray(),
       db.goals.toArray(),
+      db.aiSettings.toArray(),
     ]);
+  // Strip the API key from the exported aiSettings — backup files might be
+  // shared, sent to a GP, or end up in cloud storage; the key shouldn't follow.
+  const sanitisedAi = aiSettings.map(({ groqApiKey: _drop, ...rest }) => rest);
+
   return {
     version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
@@ -54,6 +64,7 @@ export async function gatherExport(): Promise<PulseExport> {
     notificationSchedules,
     groceryChecks,
     goals,
+    aiSettings: sanitisedAi,
   };
 }
 
@@ -82,11 +93,15 @@ export async function replaceFromExport(data: PulseExport): Promise<void> {
       `Backup is from a newer version (${data.version}); this app supports up to ${EXPORT_VERSION}.`,
     );
   }
+  // Preserve the existing API key — backups don't carry it, but a restore
+  // shouldn't wipe one the user just typed in either.
+  const existingApiKey = (await db.aiSettings.get(1))?.groqApiKey;
+
   await db.transaction(
     "rw",
     [
       db.readings, db.ingredients, db.meals, db.mealIngredients,
-      db.mealPlan, db.notificationSchedules, db.groceryChecks, db.goals,
+      db.mealPlan, db.notificationSchedules, db.groceryChecks, db.goals, db.aiSettings,
     ],
     async () => {
       await Promise.all([
@@ -98,6 +113,7 @@ export async function replaceFromExport(data: PulseExport): Promise<void> {
         db.notificationSchedules.clear(),
         db.groceryChecks.clear(),
         db.goals.clear(),
+        db.aiSettings.clear(),
       ]);
       // Preserve all IDs so foreign-key references (mealId, ingredientId)
       // stay valid. Tables were just cleared, so collisions aren't possible.
@@ -110,6 +126,9 @@ export async function replaceFromExport(data: PulseExport): Promise<void> {
         db.notificationSchedules.bulkAdd(data.notificationSchedules),
         db.groceryChecks.bulkAdd(data.groceryChecks ?? []),
         db.goals.bulkAdd(data.goals ?? []),
+        db.aiSettings.bulkAdd(
+          (data.aiSettings ?? []).map((row) => ({ ...row, groqApiKey: existingApiKey })),
+        ),
       ]);
     },
   );

@@ -17,6 +17,7 @@ import type { NotificationSchedule } from "../../models/NotificationSchedule";
 import { MEAL_SLOT_LABEL } from "../../models/Meal";
 import { ReminderEditor } from "./ReminderEditor";
 import { GoalsSection } from "./GoalsSection";
+import { AIFeedbackSection } from "./AIFeedbackSection";
 import { useDeferredUnmount } from "../../services/useDeferredUnmount";
 import "./settings.css";
 
@@ -29,6 +30,7 @@ export default function SettingsView() {
       <div className="scroll-area">
         <GoalsSection />
         <RemindersSection />
+        <AIFeedbackSection />
         <DataSection />
         <InstallSection />
       </div>

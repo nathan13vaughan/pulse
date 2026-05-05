@@ -27,6 +27,7 @@ import {
   type InsightPoint,
 } from "../../services/insightsAnalyzer";
 import { useChartColors, type ChartColors } from "../../services/useChartColors";
+import { NutritionFeedbackCard } from "./NutritionFeedbackCard";
 import "./insights.css";
 
 const RANGES = [
@@ -196,6 +197,8 @@ export default function InsightsView() {
             />
           </>
         )}
+
+        <NutritionFeedbackCard />
 
         <p className="muted insights-disclaimer">
           Personal trend analysis only. This is your own n-of-1 data, not medical advice. Talk
