@@ -38,6 +38,20 @@
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
   border-top: 0.5px solid var(--color-border);
+  transition: opacity var(--t-base), transform var(--t-base);
+}
+
+/*
+ * Hide the tab bar entirely while a modal or alert is open. Belt-and-braces
+ * against any stacking-context quirk that might let the bar peek through,
+ * and it frees up vertical room — useful since the picker's Add footer
+ * sits just above the bottom edge.
+ */
+.app-shell:has(.modal-overlay) .tab-bar,
+.app-shell:has(.alert-overlay) .tab-bar {
+  opacity: 0;
+  transform: translate(-50%, 100%);
+  pointer-events: none;
 }
 
 .tab {
