@@ -27,47 +27,116 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any, Iterator
 
-# Map OFF category tag keywords → our GroceryAisle raw value.
-# Order matters: the first match wins, so put more specific tags first.
-AISLE_KEYWORDS: list[tuple[str, str]] = [
-    ("frozen", "frozen"),
-    ("beverage", "beverages"),
-    ("drink", "beverages"),
-    ("water", "beverages"),
-    ("juice", "beverages"),
-    ("bread", "bakery"),
-    ("baker", "bakery"),
-    ("pastr", "bakery"),
-    ("dairy", "dairyEggs"),
-    ("milk", "dairyEggs"),
-    ("yog", "dairyEggs"),
-    ("cheese", "dairyEggs"),
-    ("egg", "dairyEggs"),
-    ("meat", "meatSeafood"),
-    ("poultry", "meatSeafood"),
-    ("fish", "meatSeafood"),
-    ("seafood", "meatSeafood"),
-    ("vegetable", "produce"),
-    ("fruit", "produce"),
-    ("herb", "spices"),
-    ("spice", "spices"),
-    ("sauce", "condiments"),
-    ("condiment", "condiments"),
-    ("oil", "condiments"),
-    ("vinegar", "condiments"),
-    ("cereal", "pantry"),
-    ("rice", "pantry"),
-    ("pasta", "pantry"),
-    ("flour", "pantry"),
-    ("snack", "pantry"),
-    ("biscuit", "pantry"),
-    ("legume", "pantry"),
-    ("nut", "pantry"),
-    ("seed", "pantry"),
+# Aisle inference from OFF category tags.
+#
+# We use word-boundary regex (not raw substring) for two reasons:
+#   - Avoid false positives like `egg` matching `eggplant`.
+#   - Allow safe ordering by category specificity since hyphens act as word
+#     boundaries in OFF tags (e.g. `\bfish\b` matches `en:fish-canned-in-water`).
+#
+# Order matters: first match wins. Keep specific food types BEFORE generic
+# location/preparation words like "water"/"frozen" so e.g. tuna in water
+# doesn't land in beverages.
+AISLE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    # Specific protein sources first
+    (re.compile(r"\bfish(es)?\b"),       "meatSeafood"),
+    (re.compile(r"\bseafoods?\b"),       "meatSeafood"),
+    (re.compile(r"\bsalmons?\b"),        "meatSeafood"),
+    (re.compile(r"\btunas?\b"),          "meatSeafood"),
+    (re.compile(r"\bsardines?\b"),       "meatSeafood"),
+    (re.compile(r"\banchov(y|ies)\b"),   "meatSeafood"),
+    (re.compile(r"\bprawns?\b"),         "meatSeafood"),
+    (re.compile(r"\bshrimps?\b"),        "meatSeafood"),
+    (re.compile(r"\bcrabs?\b"),          "meatSeafood"),
+    (re.compile(r"\bmeats?\b"),          "meatSeafood"),
+    (re.compile(r"\bpoultry\b"),         "meatSeafood"),
+    (re.compile(r"\bchickens?\b"),       "meatSeafood"),
+    (re.compile(r"\bbeef\b"),            "meatSeafood"),
+    (re.compile(r"\blambs?\b"),          "meatSeafood"),
+    (re.compile(r"\bporks?\b"),          "meatSeafood"),
+    (re.compile(r"\bsausages?\b"),       "meatSeafood"),
+    (re.compile(r"\bbacons?\b"),         "meatSeafood"),
+    (re.compile(r"\bham\b"),             "meatSeafood"),
+
+    # Dairy & eggs (egg pattern matches eggs but not eggplant)
+    (re.compile(r"\bdair(y|ies)\b"),     "dairyEggs"),
+    (re.compile(r"\bmilks?\b"),          "dairyEggs"),
+    (re.compile(r"\byog(h?urts?)?\b"),   "dairyEggs"),
+    (re.compile(r"\bcheeses?\b"),        "dairyEggs"),
+    (re.compile(r"\bbutters?\b"),        "dairyEggs"),
+    (re.compile(r"\bcreams?\b"),         "dairyEggs"),
+    (re.compile(r"\beggs?\b"),           "dairyEggs"),
+
+    # Bakery
+    (re.compile(r"\bbreads?\b"),         "bakery"),
+    (re.compile(r"\bbakery\b"),          "bakery"),
+    (re.compile(r"\bpastr(y|ies)\b"),    "bakery"),
+    (re.compile(r"\bcakes?\b"),          "bakery"),
+    (re.compile(r"\bmuffins?\b"),        "bakery"),
+
+    # Produce — check before "frozen" so fresh tags win, but after "frozen"
+    # in the legacy ordering would put e.g. "frozen-vegetables" in produce.
+    # We want frozen-vegetables in the frozen aisle, so frozen wins.
+    # That's why frozen comes BEFORE produce in this list.
+    (re.compile(r"\bfrozen\b"),          "frozen"),
+    (re.compile(r"\bvegetables?\b"),     "produce"),
+    (re.compile(r"\bfruits?\b"),         "produce"),
+    (re.compile(r"\bberr(y|ies)\b"),     "produce"),
+    (re.compile(r"\bsalads?\b"),         "produce"),
+
+    # Pantry staples
+    (re.compile(r"\bcereals?\b"),        "pantry"),
+    (re.compile(r"\bbreakfast\b"),       "pantry"),
+    (re.compile(r"\boats?\b"),           "pantry"),
+    (re.compile(r"\brice\b"),            "pantry"),
+    (re.compile(r"\bpastas?\b"),         "pantry"),
+    (re.compile(r"\bnoodles?\b"),        "pantry"),
+    (re.compile(r"\bflours?\b"),         "pantry"),
+    (re.compile(r"\bsugars?\b"),         "pantry"),
+    (re.compile(r"\bsnacks?\b"),         "pantry"),
+    (re.compile(r"\bbiscuits?\b"),       "pantry"),
+    (re.compile(r"\bcrackers?\b"),       "pantry"),
+    (re.compile(r"\blegumes?\b"),        "pantry"),
+    (re.compile(r"\bbeans?\b"),          "pantry"),
+    (re.compile(r"\blentils?\b"),        "pantry"),
+    (re.compile(r"\bchickpeas?\b"),      "pantry"),
+    (re.compile(r"\bnuts?\b"),           "pantry"),
+    (re.compile(r"\bseeds?\b"),          "pantry"),
+    (re.compile(r"\bjams?\b"),           "pantry"),
+    (re.compile(r"\bhoney\b"),           "pantry"),
+
+    # Condiments & oils
+    (re.compile(r"\bsauces?\b"),         "condiments"),
+    (re.compile(r"\bcondiments?\b"),     "condiments"),
+    (re.compile(r"\boils?\b"),           "condiments"),
+    (re.compile(r"\bvinegars?\b"),       "condiments"),
+    (re.compile(r"\bdressings?\b"),      "condiments"),
+    (re.compile(r"\bspreads?\b"),        "condiments"),
+    (re.compile(r"\bmayonnaise\b"),      "condiments"),
+    (re.compile(r"\bketchup\b"),         "condiments"),
+    (re.compile(r"\bmustards?\b"),       "condiments"),
+
+    # Spices & herbs
+    (re.compile(r"\bherbs?\b"),          "spices"),
+    (re.compile(r"\bspices?\b"),         "spices"),
+    (re.compile(r"\bsalts?\b"),          "spices"),
+    (re.compile(r"\bpeppers?\b"),        "spices"),
+
+    # Beverages last so things like "fish in water" don't get vacuumed up first
+    (re.compile(r"\bbeverages?\b"),      "beverages"),
+    (re.compile(r"\bdrinks?\b"),         "beverages"),
+    (re.compile(r"\bwaters?\b"),         "beverages"),
+    (re.compile(r"\bjuices?\b"),         "beverages"),
+    (re.compile(r"\bsodas?\b"),          "beverages"),
+    (re.compile(r"\bteas?\b"),           "beverages"),
+    (re.compile(r"\bcoffees?\b"),        "beverages"),
+    (re.compile(r"\bwines?\b"),          "beverages"),
+    (re.compile(r"\bbeers?\b"),          "beverages"),
 ]
 
 # Required fields per row; products missing these are dropped.
@@ -76,8 +145,8 @@ REQUIRED_NUTRIENTS = ["energy-kj_100g", "proteins_100g", "carbohydrates_100g", "
 
 def aisle_for(categories_tags: list[str]) -> str:
     haystack = " ".join(categories_tags).lower()
-    for keyword, aisle in AISLE_KEYWORDS:
-        if keyword in haystack:
+    for pattern, aisle in AISLE_PATTERNS:
+        if pattern.search(haystack):
             return aisle
     return "other"
 

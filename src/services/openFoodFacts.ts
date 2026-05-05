@@ -85,47 +85,115 @@ function roundTo(value: number, places: number): number {
   return Math.round(value * m) / m;
 }
 
-const AISLE_KEYWORDS: ReadonlyArray<readonly [string, GroceryAisle]> = [
-  ["frozen", "frozen"],
-  ["beverage", "beverages"],
-  ["drink", "beverages"],
-  ["water", "beverages"],
-  ["juice", "beverages"],
-  ["bread", "bakery"],
-  ["baker", "bakery"],
-  ["pastr", "bakery"],
-  ["dairy", "dairyEggs"],
-  ["milk", "dairyEggs"],
-  ["yog", "dairyEggs"],
-  ["cheese", "dairyEggs"],
-  ["egg", "dairyEggs"],
-  ["meat", "meatSeafood"],
-  ["poultry", "meatSeafood"],
-  ["fish", "meatSeafood"],
-  ["seafood", "meatSeafood"],
-  ["vegetable", "produce"],
-  ["fruit", "produce"],
-  ["herb", "spices"],
-  ["spice", "spices"],
-  ["sauce", "condiments"],
-  ["condiment", "condiments"],
-  ["oil", "condiments"],
-  ["vinegar", "condiments"],
-  ["cereal", "pantry"],
-  ["rice", "pantry"],
-  ["pasta", "pantry"],
-  ["flour", "pantry"],
-  ["snack", "pantry"],
-  ["biscuit", "pantry"],
-  ["legume", "pantry"],
-  ["nut", "pantry"],
-  ["seed", "pantry"],
+/**
+ * Aisle inference from OFF category tags.
+ *
+ * Word-boundary regex (not raw substring) so that:
+ *   - `egg` doesn't match `eggplant`
+ *   - `fish` correctly matches `fish-canned-in-water` without `water` winning
+ *
+ * Order matters — first match wins. Specific protein/dairy/produce types come
+ * before generic location words like "frozen" / "water" so e.g. "tuna in water"
+ * lands in meatSeafood, not beverages.
+ */
+const AISLE_PATTERNS: ReadonlyArray<readonly [RegExp, GroceryAisle]> = [
+  // Proteins
+  [/\bfish(es)?\b/, "meatSeafood"],
+  [/\bseafoods?\b/, "meatSeafood"],
+  [/\bsalmons?\b/, "meatSeafood"],
+  [/\btunas?\b/, "meatSeafood"],
+  [/\bsardines?\b/, "meatSeafood"],
+  [/\banchov(y|ies)\b/, "meatSeafood"],
+  [/\bprawns?\b/, "meatSeafood"],
+  [/\bshrimps?\b/, "meatSeafood"],
+  [/\bcrabs?\b/, "meatSeafood"],
+  [/\bmeats?\b/, "meatSeafood"],
+  [/\bpoultry\b/, "meatSeafood"],
+  [/\bchickens?\b/, "meatSeafood"],
+  [/\bbeef\b/, "meatSeafood"],
+  [/\blambs?\b/, "meatSeafood"],
+  [/\bporks?\b/, "meatSeafood"],
+  [/\bsausages?\b/, "meatSeafood"],
+  [/\bbacons?\b/, "meatSeafood"],
+  [/\bham\b/, "meatSeafood"],
+
+  // Dairy & eggs (egg pattern won't match eggplant)
+  [/\bdair(y|ies)\b/, "dairyEggs"],
+  [/\bmilks?\b/, "dairyEggs"],
+  [/\byog(h?urts?)?\b/, "dairyEggs"],
+  [/\bcheeses?\b/, "dairyEggs"],
+  [/\bbutters?\b/, "dairyEggs"],
+  [/\bcreams?\b/, "dairyEggs"],
+  [/\beggs?\b/, "dairyEggs"],
+
+  // Bakery
+  [/\bbreads?\b/, "bakery"],
+  [/\bbakery\b/, "bakery"],
+  [/\bpastr(y|ies)\b/, "bakery"],
+  [/\bcakes?\b/, "bakery"],
+  [/\bmuffins?\b/, "bakery"],
+
+  // Frozen before produce so "frozen vegetables" lands in frozen
+  [/\bfrozen\b/, "frozen"],
+  [/\bvegetables?\b/, "produce"],
+  [/\bfruits?\b/, "produce"],
+  [/\bberr(y|ies)\b/, "produce"],
+  [/\bsalads?\b/, "produce"],
+
+  // Pantry
+  [/\bcereals?\b/, "pantry"],
+  [/\bbreakfast\b/, "pantry"],
+  [/\boats?\b/, "pantry"],
+  [/\brice\b/, "pantry"],
+  [/\bpastas?\b/, "pantry"],
+  [/\bnoodles?\b/, "pantry"],
+  [/\bflours?\b/, "pantry"],
+  [/\bsugars?\b/, "pantry"],
+  [/\bsnacks?\b/, "pantry"],
+  [/\bbiscuits?\b/, "pantry"],
+  [/\bcrackers?\b/, "pantry"],
+  [/\blegumes?\b/, "pantry"],
+  [/\bbeans?\b/, "pantry"],
+  [/\blentils?\b/, "pantry"],
+  [/\bchickpeas?\b/, "pantry"],
+  [/\bnuts?\b/, "pantry"],
+  [/\bseeds?\b/, "pantry"],
+  [/\bjams?\b/, "pantry"],
+  [/\bhoney\b/, "pantry"],
+
+  // Condiments
+  [/\bsauces?\b/, "condiments"],
+  [/\bcondiments?\b/, "condiments"],
+  [/\boils?\b/, "condiments"],
+  [/\bvinegars?\b/, "condiments"],
+  [/\bdressings?\b/, "condiments"],
+  [/\bspreads?\b/, "condiments"],
+  [/\bmayonnaise\b/, "condiments"],
+  [/\bketchup\b/, "condiments"],
+  [/\bmustards?\b/, "condiments"],
+
+  // Spices & herbs
+  [/\bherbs?\b/, "spices"],
+  [/\bspices?\b/, "spices"],
+  [/\bsalts?\b/, "spices"],
+  [/\bpeppers?\b/, "spices"],
+
+  // Beverages LAST so canned-in-water doesn't trump fish
+  [/\bbeverages?\b/, "beverages"],
+  [/\bdrinks?\b/, "beverages"],
+  [/\bwaters?\b/, "beverages"],
+  [/\bjuices?\b/, "beverages"],
+  [/\bsodas?\b/, "beverages"],
+  [/\bteas?\b/, "beverages"],
+  [/\bcoffees?\b/, "beverages"],
+  [/\bwines?\b/, "beverages"],
+  [/\bbeers?\b/, "beverages"],
 ];
 
 function aisleFromCategoryTags(tags: string[]): GroceryAisle {
   const haystack = tags.join(" ").toLowerCase();
-  for (const [keyword, aisle] of AISLE_KEYWORDS) {
-    if (haystack.includes(keyword)) return aisle;
+  for (const [pattern, aisle] of AISLE_PATTERNS) {
+    if (pattern.test(haystack)) return aisle;
   }
   return "other";
 }

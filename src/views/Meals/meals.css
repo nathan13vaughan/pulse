@@ -243,6 +243,21 @@
   font-size: var(--fs-caption);
 }
 
+.picker__filters-row {
+  display: flex;
+  gap: var(--sp-xs);
+}
+
+.picker__filter-select {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: var(--fs-caption);
+  /* Keep the iOS native picker affordance — use appearance:auto so the chevron renders. */
+  appearance: auto;
+  -webkit-appearance: menulist;
+}
+
 .picker__list {
   list-style: none;
   margin: 0;
@@ -352,4 +367,26 @@
 .picker__qty,
 .picker__unit {
   padding: var(--sp-sm);
+}
+
+.picker__aisle-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  padding: 4px 0;
+}
+
+.picker__aisle-label {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  width: 60px;
+}
+
+.picker__aisle-select {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: var(--fs-caption);
 }

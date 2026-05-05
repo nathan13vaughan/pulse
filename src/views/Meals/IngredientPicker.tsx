@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../../db";
 import { Modal } from "../../components/Modal";
@@ -8,12 +8,40 @@ import {
   AISLE_LABEL,
   ingredientDisplayName,
   nutrientsPer100g,
+  type GroceryAisle,
   type Ingredient,
 } from "../../models/Ingredient";
 import { GRAMS_PER_UNIT, UNITS, type MeasurementUnit } from "../../models/MealIngredient";
 import { scaleTotals } from "../../models/NutrientTotals";
 
 type Scope = "all" | "whole" | "branded";
+type AisleFilter = GroceryAisle | "all";
+
+type SortBy = "name" | "sodiumAsc" | "sodiumDesc" | "kjAsc" | "kjDesc" | "potassiumDesc";
+
+const SORT_OPTIONS: ReadonlyArray<{ value: SortBy; label: string }> = [
+  { value: "name",          label: "Name (A–Z)" },
+  { value: "sodiumAsc",     label: "Sodium ↑" },
+  { value: "sodiumDesc",    label: "Sodium ↓" },
+  { value: "potassiumDesc", label: "Potassium ↓" },
+  { value: "kjAsc",         label: "Energy ↑" },
+  { value: "kjDesc",        label: "Energy ↓" },
+];
+
+/** Aisle order shown in the filter strip — produce first, then proteins, then everything else. */
+const AISLE_FILTER_ORDER: ReadonlyArray<{ value: AisleFilter; label: string }> = [
+  { value: "all", label: "All aisles" },
+  { value: "produce", label: AISLE_LABEL.produce },
+  { value: "meatSeafood", label: AISLE_LABEL.meatSeafood },
+  { value: "dairyEggs", label: AISLE_LABEL.dairyEggs },
+  { value: "bakery", label: AISLE_LABEL.bakery },
+  { value: "pantry", label: AISLE_LABEL.pantry },
+  { value: "condiments", label: AISLE_LABEL.condiments },
+  { value: "spices", label: AISLE_LABEL.spices },
+  { value: "frozen", label: AISLE_LABEL.frozen },
+  { value: "beverages", label: AISLE_LABEL.beverages },
+  { value: "other", label: AISLE_LABEL.other },
+];
 
 interface Props {
   open: boolean;
@@ -30,6 +58,9 @@ export function IngredientPicker({ open, onClose, onAdd }: Props) {
 
   const [search, setSearch] = useState("");
   const [scope, setScope] = useState<Scope>("all");
+  const [aisle, setAisle] = useState<AisleFilter>("all");
+  const [brand, setBrand] = useState<string>(""); // "" = all brands
+  const [sortBy, setSortBy] = useState<SortBy>("name");
   const [selected, setSelected] = useState<Ingredient | null>(null);
   const [quantity, setQuantity] = useState(100);
   const [unit, setUnit] = useState<MeasurementUnit>("g");
@@ -38,20 +69,79 @@ export function IngredientPicker({ open, onClose, onAdd }: Props) {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return ingredients.filter((ing) => {
+    const matches = ingredients.filter((ing) => {
       if (scope === "whole" && ing.brand) return false;
       if (scope === "branded" && !ing.brand) return false;
+      if (aisle !== "all" && ing.aisle !== aisle) return false;
+      if (brand && ing.brand !== brand) return false;
       if (!q) return true;
       if (ing.name.toLowerCase().includes(q)) return true;
       if (ing.brand?.toLowerCase().includes(q)) return true;
       if (ing.barcode?.includes(q)) return true;
       return false;
     });
-  }, [ingredients, scope, search]);
+
+    // Sort by chosen criterion. localeCompare gives proper en-AU collation
+    // (handles diacritics, capitalisation) — locale matters for things like
+    // "Édamame" vs "Edamame" and consistent ordering of branded names.
+    const sorted = [...matches];
+    switch (sortBy) {
+      case "name":
+        sorted.sort((a, b) => a.name.localeCompare(b.name, "en-AU", { sensitivity: "base" }));
+        break;
+      case "sodiumAsc":
+        sorted.sort((a, b) => a.sodiumMgPer100g - b.sodiumMgPer100g);
+        break;
+      case "sodiumDesc":
+        sorted.sort((a, b) => b.sodiumMgPer100g - a.sodiumMgPer100g);
+        break;
+      case "potassiumDesc":
+        sorted.sort((a, b) => b.potassiumMgPer100g - a.potassiumMgPer100g);
+        break;
+      case "kjAsc":
+        sorted.sort((a, b) => a.energyKjPer100g - b.energyKjPer100g);
+        break;
+      case "kjDesc":
+        sorted.sort((a, b) => b.energyKjPer100g - a.energyKjPer100g);
+        break;
+    }
+    return sorted;
+  }, [ingredients, scope, aisle, brand, search, sortBy]);
+
+  /** Brands that exist in the current scope-filtered set. */
+  const presentBrands = useMemo(() => {
+    const set = new Set<string>();
+    ingredients.forEach((ing) => {
+      if (scope === "whole") return;
+      if (ing.brand) set.add(ing.brand);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "en-AU"));
+  }, [ingredients, scope]);
+
+  // Whole-foods scope has no brands — clear stale brand selection.
+  useEffect(() => {
+    if (scope === "whole" && brand) setBrand("");
+  }, [scope, brand]);
+
+  // Aisles that actually appear in the current scope-filtered set, so we can
+  // hide chips that would yield zero results (e.g. "Spices" when nothing in
+  // your library lives there yet).
+  const presentAisles = useMemo(() => {
+    const set = new Set<GroceryAisle>();
+    ingredients.forEach((ing) => {
+      if (scope === "whole" && ing.brand) return;
+      if (scope === "branded" && !ing.brand) return;
+      set.add(ing.aisle);
+    });
+    return set;
+  }, [ingredients, scope]);
 
   const reset = () => {
     setSearch("");
     setScope("all");
+    setAisle("all");
+    setBrand("");
+    setSortBy("name");
     setSelected(null);
     setQuantity(100);
     setUnit("g");
@@ -137,6 +227,51 @@ export function IngredientPicker({ open, onClose, onAdd }: Props) {
               </button>
             ))}
           </div>
+
+          <div className="filter-strip" data-no-swipe="true">
+            {AISLE_FILTER_ORDER.map((opt) => {
+              if (opt.value !== "all" && !presentAisles.has(opt.value)) return null;
+              const active = aisle === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className={`chip ${active ? "chip--active" : ""}`}
+                  onClick={() => setAisle(opt.value)}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="picker__filters-row">
+            {presentBrands.length > 0 ? (
+              <select
+                className="text-input picker__filter-select"
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                aria-label="Filter by brand"
+              >
+                <option value="">All brands</option>
+                {presentBrands.map((b) => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            ) : (
+              <span aria-hidden style={{ flex: 1 }} />
+            )}
+            <select
+              className="text-input picker__filter-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortBy)}
+              aria-label="Sort"
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <ul className="picker__list">
@@ -216,12 +351,38 @@ function PickerFooter({ ingredient, quantity, unit, onQuantityChange, onUnitChan
   const grams = quantity * GRAMS_PER_UNIT[unit];
   const totals = scaleTotals(nutrientsPer100g(ingredient), grams / 100);
 
+  // Persist any aisle change immediately to the ingredient row so the grocery
+  // list (and every other view) re-renders with the corrected aisle.
+  const onAisleChange = async (next: GroceryAisle) => {
+    if (ingredient.id === undefined || next === ingredient.aisle) return;
+    await db.ingredients.update(ingredient.id, { aisle: next });
+  };
+
+  const aisleOptions: GroceryAisle[] = [
+    "produce", "meatSeafood", "dairyEggs", "bakery", "pantry",
+    "condiments", "spices", "frozen", "beverages", "other",
+  ];
+
   return (
     <div className="picker__footer">
       <div className="picker__footer-name">{ingredientDisplayName(ingredient)}</div>
       <div className="picker__footer-summary muted">
         {Math.round(totals.energyKj)} kJ · {Math.round(totals.sodiumMg)} mg Na · {Math.round(grams)} g
       </div>
+
+      <label className="picker__aisle-row">
+        <span className="muted picker__aisle-label">Aisle</span>
+        <select
+          className="text-input picker__aisle-select"
+          value={ingredient.aisle}
+          onChange={(e) => void onAisleChange(e.target.value as GroceryAisle)}
+        >
+          {aisleOptions.map((a) => (
+            <option key={a} value={a}>{AISLE_LABEL[a]}</option>
+          ))}
+        </select>
+      </label>
+
       <div className="picker__footer-controls">
         <input
           type="number"

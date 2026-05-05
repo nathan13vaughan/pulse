@@ -26,6 +26,16 @@ const AISLE_VALUES: ReadonlyArray<GroceryAisle> = [
   "frozen", "beverages", "condiments", "spices", "other",
 ];
 
+/**
+ * Bundle version. **Bump this whenever you expand `ausnut_foods.json` or
+ * `branded_foods.json`** so existing installs pick up the new entries on next
+ * launch without wiping their data. Existing rows are never modified — only
+ * brand-new keys / barcodes get added.
+ */
+const BUNDLE_VERSION = 2;
+
+const STORAGE_KEY = "pulse:lastImportedBundleVersion";
+
 function parseAisle(raw?: string): GroceryAisle {
   if (raw && (AISLE_VALUES as readonly string[]).includes(raw)) return raw as GroceryAisle;
   return "other";
@@ -51,15 +61,58 @@ function rowToIngredient(row: ImportRow): Ingredient {
   };
 }
 
-/** Idempotent — only seeds when the ingredients table is empty. */
+function getLastBundleVersion(): number {
+  if (typeof localStorage === "undefined") return 0;
+  const raw = localStorage.getItem(STORAGE_KEY);
+  const n = parseInt(raw ?? "0", 10);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function setLastBundleVersion(v: number): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(STORAGE_KEY, String(v));
+}
+
+/**
+ * Seed (first launch) or upsert (later launches with a newer bundle).
+ *
+ * - First launch (table empty): bulk-import everything.
+ * - Later launches: if `BUNDLE_VERSION` exceeds the locally-recorded version,
+ *   add only the entries whose Public Food Key (AUSNUT) or barcode (OFF) isn't
+ *   already in the local DB. User-edited or user-added entries are preserved.
+ *   Deleted entries do NOT come back unless the bundle version is bumped again
+ *   AND the entry is still in the bundled JSON.
+ */
 export async function importIfNeeded(): Promise<void> {
-  const existing = await db.ingredients.count();
-  if (existing > 0) return;
+  const ausnutRows = (ausnutData as ImportRow[]).map(rowToIngredient);
+  const brandedRows = (brandedData as ImportRow[]).map(rowToIngredient);
+  const all = [...ausnutRows, ...brandedRows];
 
-  const rows: Ingredient[] = [
-    ...(ausnutData as ImportRow[]).map(rowToIngredient),
-    ...(brandedData as ImportRow[]).map(rowToIngredient),
-  ];
+  const existingCount = await db.ingredients.count();
+  if (existingCount === 0) {
+    await db.ingredients.bulkAdd(all);
+    setLastBundleVersion(BUNDLE_VERSION);
+    return;
+  }
 
-  await db.ingredients.bulkAdd(rows);
+  const lastVersion = getLastBundleVersion();
+  if (lastVersion >= BUNDLE_VERSION) return;
+
+  // Upsert path: figure out which keys / barcodes the local DB is missing,
+  // and bulk-add only those.
+  const existing = await db.ingredients.toArray();
+  const existingKeys = new Set(existing.map((i) => i.publicFoodKey).filter(Boolean));
+  const existingBarcodes = new Set(existing.map((i) => i.barcode).filter(Boolean));
+
+  const missing = all.filter((row) => {
+    if (row.publicFoodKey && existingKeys.has(row.publicFoodKey)) return false;
+    if (row.barcode && existingBarcodes.has(row.barcode)) return false;
+    return true;
+  });
+
+  if (missing.length > 0) {
+    await db.ingredients.bulkAdd(missing);
+    console.log(`Imported ${missing.length} new ingredients from bundle v${BUNDLE_VERSION}.`);
+  }
+  setLastBundleVersion(BUNDLE_VERSION);
 }
